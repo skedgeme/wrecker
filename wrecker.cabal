@@ -1,0 +1,65 @@
+name:                wrecker
+version:             0.1.0.0
+synopsis:            Initial project template from stack
+description:         Please see README.md
+homepage:            https://github.com/githubuser/wrecker#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Author name here
+maintainer:          example@example.com
+copyright:           2016 Author name here
+category:            Web
+build-type:          Simple
+-- extra-source-files:
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  exposed-modules: Wrecker
+                 , Wrecker.Recorder
+                 , Wrecker.Runner
+                 , Wrecker.Main
+                 , Wrecker.Options
+                 , Wrecker.Statistics
+                 , Wrecker.Logger
+  build-depends: base >= 4.7 && < 5
+               , stm
+               , stm-chans
+               , aeson-qq
+               , statistics
+               , vector
+               , bytestring
+               , aeson
+               , unix
+               , ansigraph
+               , time
+               , clock
+               , text
+               , http-client
+               , http-types
+               , tabular
+               , deepseq
+               , unordered-containers
+               , threads
+               , vty
+               , threads-extras
+               , clock-extras
+               , optparse-applicative
+               , next-ref
+               , ansi-terminal
+               , unagi-chan
+               , histogram-magnitude
+  default-language:    Haskell2010
+  ghc-options:         -Wall -Werror -Wno-unused-do-bind
+
+test-suite wrecker-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  build-depends:       base
+                     , wrecker
+                     , hspec
+                     , hspec-discovery
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+
