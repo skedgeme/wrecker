@@ -16,17 +16,32 @@ data DisplayMode = Interactive | NonInteractive
   
 data Options = Options
   { concurrency           :: Int
+  -- ^ The number of simulatanous connections
   , binCount              :: Int
+  -- ^ The number of bins for the histogram
   , runStyle              :: RunType
+  -- ^ runStyle determines if the 'wrecker' runs for a specified
+  --   time period or for a specified number of runs.
   , timeoutTime           :: Int
+  -- ^ How long to wait after the first benchmark for the other threads 
+  --   to finish
   , displayMode           :: DisplayMode
+  -- ^ This controls the command line display. It can be either Interactive
+  --   of NonInteractive
   , logLevel              :: LogLevel
+  -- ^ 
   , match                 :: String
+  -- ^ Set this to filter the benchmarks using a pattern
   , requestNameColumnSize :: Maybe Int
+  -- ^ Limit the request name column to the given size
   , outputFilePath        :: Maybe FilePath
+  -- ^ Dump the results to JSON file
   , silent                :: Bool
+  -- ^ Set 'silent' to true to disable all output.
   } deriving (Show, Eq)
-  
+
+-- | 'defaultOptions' provides sensible default for the 'Options' 
+--   types
 defaultOptions :: Options
 defaultOptions = Options 
   { concurrency           = 1

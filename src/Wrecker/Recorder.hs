@@ -30,6 +30,9 @@ data Event = Event
   , result    :: !RunResult
   } deriving (Show)
 
+-- | An opaque type for recording actions for profiling. 
+--   No means are provided for creating a 'Recorder' directly.
+--   To obtain a 'Recorder' use either 'run' or 'defaultMain'.
 data Recorder = Recorder 
   { rRunIndex :: !Int
   , rQueue    :: !(TBMQueue Event)
@@ -52,6 +55,43 @@ addEvent (Recorder runIndex queue) runResult =
 readEvent :: Recorder -> IO (Maybe Event)
 readEvent = atomically . readTBMQueue . rQueue
 
+{- | 'record' is how HTTP actions are profiled. Wrap each action of 
+     interest in a call to record.
+
+> import Network.Wreq.Session
+> import Data.Aeson
+> 
+> loginReshare :: Recorder -> IO ()
+> loginReshare recorder = withSession $ \session -> do
+>   let rc = record recorder
+>   
+>   userId <- rc "login" 
+>           $ asJSON
+>         =<< ( post session "https://somesite.com/login" 
+>             $ object [ "email"    .= "example@example.com"
+>                      , "password" .= "12345678"
+>                      ]
+>             )
+>
+>   itemRef : _ <- rc "get feed" 
+>                $ asJSON
+>              =<< ( post session userId 
+>                  $ object [ "email"    .= "example@example.com"
+>                           , "password" .= "12345678"
+>                           ]
+>                  )
+>   rc "reshare" $ post session "https://somesite.com/share" 
+>                $ object [ "type" : "reshare"
+>                         , "ref"  : itemRef
+>                         ]
+
+   In this case the 'loginReshare' script would record three actions: "login", 
+   "get feed" and "reshare".
+
+  'record' measures the elapsed time of the call, and catches 
+  'HttpException' in the case of failure. This means failures
+   must be thrown if they are to be properly recorded. 
+-}
 record :: forall a. Recorder -> String -> IO a -> IO a
 record recorder key action = do
   startTime <- getTime Monotonic

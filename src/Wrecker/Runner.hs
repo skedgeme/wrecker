@@ -185,6 +185,13 @@ runInteractive options action = do
 -------------------------------------------------------------------------------
 ---   Main Entry Point
 -------------------------------------------------------------------------------
+-- | 'run' is the a lower level entry point, compared to 'defaultMain'. Unlike
+--    'defaultMain' no command line argument parsing is performed. Instead, 
+--    'Options' are directly passed in. 'defaultOptions' can be used as a 
+--    default argument for 'run'. 
+--    
+--    Like 'defaultMain', 'run' creates a 'Recorder' and passes it each
+--    benchmark.
 run :: Options -> [(String, Recorder -> IO ())] -> IO ()
 run options actions = do 
   hSetBuffering stderr LineBuffering
