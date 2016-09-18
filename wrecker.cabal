@@ -1,6 +1,6 @@
 name:                wrecker
-version:             0.1.0.0
-synopsis:            An HTTP Performance Benchmarker
+version:             0.1.0.1
+synopsis:            A HTTP Performance Benchmarker
 description:         
  'wrecker' is a library for creating HTTP benchmarks. It is designed for
  benchmarking a series of HTTP request were the output of previous requests
