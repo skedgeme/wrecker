@@ -1,6 +1,6 @@
 name:                wrecker
 version:             0.1.0.0
-synopsis:            Initial project template from stack
+synopsis:            An HTTP Performance Benchmarker
 description:         Please see README.md
 homepage:            https://github.com/githubuser/wrecker#readme
 license:             BSD3
@@ -35,7 +35,7 @@ library
                , time
                , clock
                , text
-               , http-client
+               , http-client >= 0.5 && < 0.6
                , http-types
                , tabular
                , deepseq
@@ -45,12 +45,12 @@ library
                , threads-extras
                , clock-extras
                , optparse-applicative
-               , next-ref
+               , stm-chans
                , ansi-terminal
                , unagi-chan
-               , histogram-magnitude
+               , next-ref
   default-language:    Haskell2010
-  ghc-options:         -Wall -Werror -Wno-unused-do-bind
+  ghc-options:         -Wall -Werror -fno-warn-unused-do-bind
 
 test-suite wrecker-test
   type:                exitcode-stdio-1.0

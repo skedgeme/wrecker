@@ -1,5 +1,6 @@
-{-# LANGUAGE RecordWildCards, ScopedTypeVariables, GeneralizedNewtypeDeriving, DeriveGeneric  #-}
-{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE RecordWildCards, ScopedTypeVariables #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, DeriveGeneric  #-}
+{-# LANGUAGE DeriveAnyClass, CPP #-}
 module Wrecker.Recorder where
 import           Control.Concurrent.STM
 import           Control.Concurrent.STM.TBMQueue
@@ -60,7 +61,7 @@ record recorder key action = do
         r       <- action
         endTime <- getTime Monotonic
         addEvent recorder $ Success 
-                            { resultTime = diffTime endTime startTime
+                            { resultTime = diffSeconds endTime startTime
                             , name       = key
                             }
         return r
@@ -69,16 +70,23 @@ record recorder key action = do
       recordException e = do
         endTime <- getTime Monotonic
         case e of 
+#if MIN_VERSION_http_client(0,5,0)
+          HTTP.HttpExceptionRequest _ (HTTP.StatusCodeException resp _) -> do
+            let code = HTTP.statusCode $ HTTP.responseStatus resp
+#else
           HTTP.StatusCodeException stat _ _  -> do
             let code = HTTP.statusCode stat
+#endif
+      
+
             addEvent recorder $ ErrorStatus
-                                { resultTime = diffTime endTime startTime 
+                                { resultTime = diffSeconds endTime startTime 
                                 , errorCode  = code 
                                 , name       = key
                                 }
                                       
           _ -> addEvent recorder $ Error 
-                                   { resultTime = diffTime endTime startTime
+                                   { resultTime = diffSeconds endTime startTime
                                    , exception  = toException e
                                    , name       = key
                                    }

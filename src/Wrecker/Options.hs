@@ -1,9 +1,12 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE RecordWildCards, CPP #-}
 module Wrecker.Options where
 import Options.Applicative.Builder
 import Options.Applicative
 import Control.Exception
 import Wrecker.Logger
+#if __GLASGOW_HASKELL__ == 710
+import Data.Monoid
+#endif
 
 data RunType = RunCount Int | RunTimed Int
   deriving (Show, Eq)
