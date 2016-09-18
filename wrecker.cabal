@@ -63,7 +63,7 @@ library
                , unagi-chan
                , next-ref
   default-language:    Haskell2010
-  ghc-options:         -Wall -Werror -fno-warn-unused-do-bind
+  ghc-options:         -Wall -fno-warn-unused-do-bind
 
 test-suite wrecker-test
   type:                exitcode-stdio-1.0
