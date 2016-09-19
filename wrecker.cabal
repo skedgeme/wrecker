@@ -38,7 +38,6 @@ library
   build-depends: base >= 4.7 && < 5
                , stm
                , stm-chans
-               , aeson-qq
                , statistics
                , vector
                , bytestring
@@ -58,7 +57,6 @@ library
                , threads-extras
                , clock-extras
                , optparse-applicative
-               , stm-chans
                , ansi-terminal
                , unagi-chan
                , next-ref
@@ -72,6 +70,6 @@ test-suite wrecker-test
   build-depends:       base
                      , wrecker
                      , hspec
-                     , hspec-discovery
+                     , hspec-discover
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
