@@ -86,7 +86,7 @@ runWithNextVar :: Options
               -> (NextRef AllStats -> IO ())
               -> (NextRef AllStats -> IO ())
               -> (Recorder -> IO ())
-              -> IO ()
+              -> IO AllStats
 runWithNextVar (Options {..}) consumer final action = do
   recorder <- newRecorder 100000
   sampler  <- newNextRef emptyAllStats
@@ -104,13 +104,14 @@ runWithNextVar (Options {..}) consumer final action = do
         shutdownLogger 1000000 logger 
         final sampler
     )
+  return $ readLast sampler
 -------------------------------------------------------------------------------
 ---   Non-interactive Rendering
 -------------------------------------------------------------------------------
 printLastSamples :: Options -> NextRef AllStats -> IO ()
 printLastSamples options sampler = printStats options =<< readLast sampler
 
-runNonInteractive :: Options -> (Recorder -> IO ()) -> IO ()
+runNonInteractive :: Options -> (Recorder -> IO ()) -> IO AllStats
 runNonInteractive options action = do  
   let shutdown sampler = do
         putStrLn ""
@@ -154,7 +155,7 @@ updateUI nameSize displayContext stats
   $ lines 
   $ pprStats nameSize stats
 
-runInteractive :: Options -> (Recorder -> IO ()) -> IO ()
+runInteractive :: Options -> (Recorder -> IO ()) -> IO AllStats
 runInteractive options action = do  
   vtyConfig       <- VTY.standardIOConfig 
   vty             <- VTY.mkVty vtyConfig
@@ -192,7 +193,7 @@ runInteractive options action = do
 --    
 --    Like 'defaultMain', 'run' creates a 'Recorder' and passes it each
 --    benchmark.
-run :: Options -> [(String, Recorder -> IO ())] -> IO ()
+run :: Options -> [(String, Recorder -> IO ())] -> IO AllStats
 run options actions = do 
   hSetBuffering stderr LineBuffering
   

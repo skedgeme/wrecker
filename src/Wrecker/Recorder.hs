@@ -65,17 +65,17 @@ readEvent = atomically . readTBMQueue . rQueue
 > loginReshare recorder = withSession $ \session -> do
 >   let rc = record recorder
 >   
->   userId <- rc "login" 
->           $ asJSON
->         =<< ( post session "https://somesite.com/login" 
->             $ object [ "email"    .= "example@example.com"
->                      , "password" .= "12345678"
->                      ]
->             )
->
+>   Object user <- rc "login" 
+>                $ asJSON
+>             =<< ( post session "https://somesite.com/login" 
+>                 $ object [ "email"    .= "example@example.com"
+>                          , "password" .= "12345678"
+>                         ]
+>                 )
+>   let Just feedUrl = H.lookup "feed" user 
 >   itemRef : _ <- rc "get feed" 
 >                $ asJSON
->              =<< ( post session userId 
+>              =<< ( post session feedUrl 
 >                  $ object [ "email"    .= "example@example.com"
 >                           , "password" .= "12345678"
 >                           ]
