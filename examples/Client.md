@@ -112,14 +112,14 @@ We utilize our `jsonGet` and `jsonPost` functions and make specialized versions.
 
 ```haskell
 
-get :: FromJSON a => Recorder -> String -> Ref a -> IO a
-get recorder key (Ref url) = jsonGet recorder key url
+getWithRecorder :: FromJSON a => Recorder -> String -> Ref a -> IO a
+getWithRecorder recorder key (Ref url) = jsonGet recorder key url
 
-add :: (ToJSON a, FromJSON a) => Recorder -> String -> Ref [a] -> a -> IO (Ref [a])
-add recorder key (Ref url) = jsonPost recorder key url
+insertWithRecorder :: (ToJSON a, FromJSON a) => Recorder -> String -> Ref [a] -> a -> IO (Ref [a])
+insertWithRecorder recorder key (Ref url) = jsonPost recorder key url
 
-rpc :: (ToJSON a, FromJSON b) => Recorder -> String -> RPC a b -> a -> IO b
-rpc recorder key (RPC url) = jsonPost recorder key url
+rpcWithRecorder :: (ToJSON a, FromJSON b) => Recorder -> String -> RPC a b -> a -> IO b
+rpcWithRecorder recorder key (RPC url) = jsonPost recorder key url
 ```
 
 The API requires an initial call to the "/root" to obtain the URLs for subsequent calls
@@ -182,9 +182,9 @@ testScript port recorder = do
 First we make some copies of our api functions with `Recorder` partially applied.
 
 ```haskell
-  let get' = get recorder
-      add' = add recorder
-      rpc' = rpc recorder
+  let get    = getWithRecorder recorder
+      insert = insertWithRecorder recorder
+      rpc    = rpcWithRecorder recorder
 ```
 
 Now we can use the copies without threading the recorder everywhere.
@@ -192,16 +192,16 @@ Now we can use the copies without threading the recorder everywhere.
 Bootstrap the script and get all the urls for the endpoints. Unpack `login` and `products`.
 
 ```haskell
-  Root { login, products } <- get' "root" (rootRef port)
+  Root { login, products } <- get "root" (rootRef port)
 ```
 We get all products and name the first one
 ```haskell
-  firstProduct : _ <- get' "products" products
+  firstProduct : _ <- get "products" products
 ```
 
 Login and get the user's ref.
 ```haskell
-  userRef <- rpc' "login" login
+  userRef <- rpc "login" login
                           ( Credentials
                              { userName = "a@example.com"
                              , password = "password"
@@ -210,19 +210,19 @@ Login and get the user's ref.
 ```
 Get the user and unpack the user's cart.
 ```haskell
-  User { usersCart } <- get' "user" userRef
+  User { usersCart } <- get "user" userRef
 ```
 Get the cart unpack the items.
 ```haskell
-  Cart { items } <- get' "cart" usersCart
+  Cart { items } <- get "cart" usersCart
 ```
 Add the first product to the user's cart's items.
 ```haskell
-  add' "items" items firstProduct
+  insert "items" items firstProduct
 ```
 Checkout.
 ```haskell
-  rpc' "checkout" checkout cart
+  rpc "checkout" checkout cart
 ```
 
 Port is hard coded to 3000 for this example
