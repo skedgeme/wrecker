@@ -149,8 +149,8 @@ data Cart = Cart                           --     --
 data User = User                           --     --  
   { cart        :: Ref Cart                -- <=> -- { "cart"        : "http://localhost:3000/carts/0"
   , credentials :: Credentials             --     -- , "credentials" : { "user-name" : "example"
-                                                                     , "password"  : "password" 
-                                                                     }
+                                           --     --                 , "password"  : "password" 
+                                           --     --                 }
   } deriving (Eq, Show, Generic, FromJSON) --     -- }
 ```
 
