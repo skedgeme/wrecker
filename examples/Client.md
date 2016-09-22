@@ -121,7 +121,7 @@ We can wrap functions too.
 ```
 liftEnvelop :: (ToJSON a, FromJSON b)
             => (Value -> IO (Wreq.Response ByteString))
-            -> (a     -> IO b)
+            -> (a     -> IO b                         )
 liftEnvelop f = fromEnvelope . f . toEnvelope
 ```
 
