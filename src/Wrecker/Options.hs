@@ -4,9 +4,7 @@ import Options.Applicative.Builder
 import Options.Applicative
 import Control.Exception
 import Wrecker.Logger
-#if __GLASGOW_HASKELL__ < 800
 import Data.Monoid
-#endif
 
 data RunType = RunCount Int | RunTimed Int
   deriving (Show, Eq)
