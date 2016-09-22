@@ -181,12 +181,10 @@ for our more specific REST and RPC calls.
 getWithRecorder :: FromJSON a => Recorder -> String -> Ref a -> IO a
 getWithRecorder recorder key (Ref url) = jsonGet recorder key url
 
-insertWithRecorder :: (ToJSON a, FromJSON a)
-                   => Recorder -> String -> Ref [a] -> a -> IO (Ref [a])
+insertWithRecorder :: (ToJSON a, FromJSON a) => Recorder -> String -> Ref [a] -> a -> IO (Ref [a])
 insertWithRecorder recorder key (Ref url) = jsonPost recorder key url
 
-rpcWithRecorder :: (ToJSON a, FromJSON b)
-                => Recorder -> String -> RPC a b -> a -> IO b
+rpcWithRecorder :: (ToJSON a, FromJSON b) => Recorder -> String -> RPC a b -> a -> IO b
 rpcWithRecorder recorder key (RPC url) = jsonPost recorder key url
 ```
 
