@@ -1,19 +1,19 @@
 name:                wrecker
 version:             0.1.0.1
 synopsis:            A HTTP Performance Benchmarker
-description:         
+description:
  'wrecker' is a library for creating HTTP benchmarks. It is designed for
  benchmarking a series of HTTP request were the output of previous requests
- are used as inputs to the next request. This is useful for complex API 
+ are used as inputs to the next request. This is useful for complex API
  profiling situations.
- 
- 
+
+
  'wrecker' does not provide any mechanism for making HTTP calls. It works
- with any HTTP client that produces a 'HttpException' during failure (so 
+ with any HTTP client that produces a 'HttpException' during failure (so
  http-client and wreq will work out of the box).
- 
- 
- See the documentation for examples of how to use 'wrecker' with 
+
+
+ See the documentation for examples of how to use 'wrecker' with
  benchmarking scripts.
 homepage:            https://github.com/skedgeme/wrecker#readme
 license:             BSD3
@@ -47,7 +47,7 @@ library
                , time
                , clock
                , text
-               , http-client >= 0.5 && < 0.6
+               , http-client >= 0.4 && < 0.5
                , http-types
                , tabular
                , deepseq
@@ -61,7 +61,7 @@ library
                , unagi-chan
                , next-ref
   default-language:    Haskell2010
-  ghc-options:         -Wall -fno-warn-unused-do-bind
+  ghc-options:         -Wall -fno-warn-unused-do-bind -pgmL markdown-unlit
 
 test-suite wrecker-test
   type:                exitcode-stdio-1.0
@@ -77,5 +77,6 @@ test-suite wrecker-test
                      , warp
                      , data-default
                      , wreq
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+                     , markdown-unlit
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -pgmL markdown-unlit
   default-language:    Haskell2010
