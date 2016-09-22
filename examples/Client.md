@@ -182,9 +182,9 @@ testScript port recorder = do
 First we make some copies of our api functions with `Recorder` partially applied.
 
 ```haskell
-  let get    = getWithRecorder recorder
+  let get    = getWithRecorder    recorder
       insert = insertWithRecorder recorder
-      rpc    = rpcWithRecorder recorder
+      rpc    = rpcWithRecorder    recorder
 ```
 
 Now we can use the copies without threading the recorder everywhere.
