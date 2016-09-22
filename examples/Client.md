@@ -38,12 +38,28 @@ import qualified Network.Wreq as Wreq
 
 Here we wrap `wreq`'s `get` and `post` calls and make new functions which take a `Recorder` so we can benchmark the times.
 
-```haskell
-apiGet :: Recorder -> String -> String -> IO (Wreq.Response ByteString)
-apiGet recorder key = wrapEnvelope . record recorder key . Wreq.get
+First, there is the ever popular `Envelope` type.
 
-apiPost :: Wreq.Postable a => String -> String -> a -> IO (Wreq.Response ByteString)
-apiPost recorder key = wrapEnvelope record recorder key . Wreq.post 
+```haskell
+data Envelope a = Envelope { value :: a } -- <=> -- {"value" : toJSON a}
+  deriving (Show, Eq, Generic, FromJSON)
+```
+
+```haskell
+fromEnvelope :: FromJSON a => IO (Wreq.Response ByteString) -> IO a
+fromEnvelope x = fmap unEnvelope =<< asJSON x
+
+toEnvelope :: ToJSON a => Value
+toEnvelope = toJSON . Envelope
+
+wrapEnvelop :: (Value -> IO (Envelope Value)) -> ((ToJSON a, FromJSON b) => a -> IO b)
+wrapEnvelop f = fromEnvelope . f . toEnvelope
+
+apiGet :: FromJSON a => Recorder -> String -> String -> IO a
+apiGet recorder key = fromEnvelope  $ record recorder key . Wreq.get
+
+apiPost :: (ToJSON a, FromJSON b) => String -> String -> a -> IO b
+apiPost recorder key = wrapEnvelope $ record recorder key . Wreq.post 
 ```
 
 Alright now it is time to make our client for out toy API.
@@ -73,32 +89,19 @@ instance FromJSON (RPC a b) where
   parseJSON = withText "FromJSON (Ref a)" RPC
 ```
 
-Finally there is the ever popular `Envelope` type.
+Next we utilize our api-verb functions and make specialized versions.
 
 ```haskell
-data Envelope a = Envelope { value :: a }
-  deriving (Show, Eq, Generic, FromJSON)
-```
 
-Next we utilize our wreckerVERB functions.
-
-```haskell
-fromEnvelope :: FromJSON a => IO (Wreq.Response ByteString) -> IO a
-fromEnvelope x = fmap unEnvelope =<< asJSON x
-
-toEnvelope :: ToJSON a => Value
-toEnvelope = 
-
-wrapEnvelop :: (ToJSON )
 
 get :: FromJSON a => Recorder -> String -> Ref a -> IO a
-get recorder key = fromEnvelope . wreckerGet recorder key . unRef
+get recorder key (Ref url) = apiGet recorder key url
 
 add :: (ToJSON a, FromJSON a) => Recorder -> String -> Ref [a] -> a -> IO (Ref [a])
-add recorder key (Ref url) = fromEnvelope . wreckerPost recorder key url . toEnvelope
+add recorder key (Ref url) = apiPost recorder key url 
 
 rpc :: (ToJSON a, FromJSON b) => Recorder -> String -> RPC a b -> a -> IO b
-rpc recorder key (RPC url) x = fromEnvelope . wreckerPost recorder key url . toEnvelope
+rpc recorder key (RPC url) = apiPost recorder key url
 ```
 
 The API requires an initial call to the '/root' to obtain the URLs for subsequent calls
@@ -108,21 +111,10 @@ rootRef :: Port -> Ref Root
 rootRef port = Ref $ "http://localhost:" ++ show port ++ "/root"
 ```
 
-Calling `GET` on `rootRef` returns the following JSON.
-
-```json
-{ "products" : "http://localhost:3000/products"
-, "carts"    : "http://localhost:3000/carts"
-, "users"    : "http://localhost:3000/users"
-, "login"    : "http://localhost:3000/login"
-, "checkout" : "http://localhost:3000/checkout"
-}
-```
-
-We convert this to the following Haskell type:
-
-```haskell
-data Root = Root
+                                                  Calling `GET` on `rootRef` returns the following JSON
+                                                                        |
+```haskell                                 --     --                    |
+data Root = Root                           --     --                    |
   { products :: Ref [Ref Product]          --     -- { "products" : "http://localhost:3000/products"
   , carts    :: Ref [Ref Cart   ]          -- <=> -- , "carts"    : "http://localhost:3000/carts"
   , users    :: Ref [Ref User   ]          --     -- , "users"    : "http://localhost:3000/users"
@@ -154,12 +146,8 @@ data User = User                           --     --
   } deriving (Eq, Show, Generic, FromJSON) --     -- }
 ```
 
+
 ```haskell
-
-```
-
-
-```
 testScript :: Port -> Recorder -> IO ()
 testScript port recorder = do
   let get' = get recorder
