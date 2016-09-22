@@ -137,15 +137,15 @@ jsonPost :: (ToJSON a, FromJSON b) => Recorder -> String -> String -> a -> IO b
 jsonPost recorder key url = liftEnvelope $ record recorder key . Wreq.post url
 ```
 
-Alright now it is time to make our client for our toy API.
+## Make a Somewhat Generic REST API
+
+### Resource References
 
 Our client we will represent resource urls using the type `Ref`
 ```haskell
 data Ref a = Ref { unRef :: Text }
   deriving (Show, Eq)
 ```
-
-## Make a Somewhat Generic REST API
 
 `Ref` is nothing more than a `Text` wrapper (the value there is the URL). `Ref`
 has polymorphic `a` so we can talk about different types of resources. It's use
@@ -161,6 +161,8 @@ instance FromJSON (Ref a) where
 In addition to resources our API has ad-hoc RPC calls. RPC calls are also
 represented as a URL.
 
+### Adhoc RPC
+
 ```haskell
 data RPC a b = RPC String
   deriving (Show, Eq)
@@ -169,23 +171,29 @@ instance FromJSON (RPC a b) where
   parseJSON = withText "FromJSON (Ref a)" RPC
 ```
 
-We utilize our `jsonGet` and `jsonPost` functions and make specialized versions.
+### REST API Actions
+
+We utilize our `jsonGet` and `jsonPost` functions and make specialized versions
+for our more specific REST and RPC calls.
 
 ```haskell
 
 getWithRecorder :: FromJSON a => Recorder -> String -> Ref a -> IO a
 getWithRecorder recorder key (Ref url) = jsonGet recorder key url
 
-insertWithRecorder :: (ToJSON a, FromJSON a) => Recorder -> String -> Ref [a] -> a -> IO (Ref [a])
+insertWithRecorder :: (ToJSON a, FromJSON a)
+                   => Recorder -> String -> Ref [a] -> a -> IO (Ref [a])
 insertWithRecorder recorder key (Ref url) = jsonPost recorder key url
 
-rpcWithRecorder :: (ToJSON a, FromJSON b) => Recorder -> String -> RPC a b -> a -> IO b
+rpcWithRecorder :: (ToJSON a, FromJSON b)
+                => Recorder -> String -> RPC a b -> a -> IO b
 rpcWithRecorder recorder key (RPC url) = jsonPost recorder key url
 ```
 
 ## The Example API
 
-The API requires an initial call to the "/root" to obtain the URLs for subsequent calls
+The API requires an initial call to the "/root" to obtain the URLs for
+subsequent calls
 
 ```haskell
 rootRef :: Port -> Ref Root
