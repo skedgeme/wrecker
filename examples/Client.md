@@ -21,7 +21,11 @@ Now we import the packages necessary to make the client.
 import Wrecker (record, defaultMain)
 ```
 
-`record` is the primary function from `wrecker`. It has the type `Recorder -> String -> IO a -> IO a`. `record` takes a `Recorder` and key in the form of a `String` and wraps some `IO` action. `record` runs the passed in `IO a` and um ... records information about such as the elapsed time and whether it succeeded or failed.
+`record` is the primary function from `wrecker`. It has the signature
+```haskell
+record :: Recorder -> String -> IO a -> IO a
+```
+`record` takes a `Recorder` and key in the form of a `String` and wraps some `IO` action. `record` runs the passed in `IO a` and um ... records information about such as the elapsed time and whether it succeeded or failed.
 
 
 `defaultMain` is one of two entry points `wrecker` provides (the other is `run`). `defaultMain` performs command line argument parsing for us, and runs the benchmarks with the provided options. Additionally, `defaultMain` creates a `Recorder` that is used by all the benchmark scripts.
@@ -38,28 +42,40 @@ import qualified Network.Wreq as Wreq
 
 Here we wrap `wreq`'s `get` and `post` calls and make new functions which take a `Recorder` so we can benchmark the times.
 
-First, there is the ever popular `Envelope` type.
+First, there is the ever popular `Envelope` type. On the right of the type definition is the JSON serialization.
 
 ```haskell
 data Envelope a = Envelope { value :: a } -- <=> -- {"value" : toJSON a}
   deriving (Show, Eq, Generic, FromJSON)
 ```
 
+The `Envelope` is only exists to transmit data between the server and the browser.
+
+
+We unwrap values coming from the server in `Envelope`.
 ```haskell
 fromEnvelope :: FromJSON a => IO (Wreq.Response ByteString) -> IO a
-fromEnvelope x = fmap unEnvelope =<< asJSON x
-
+fromEnvelope x = fmap unEnvelope =<< asJSON =<< x
+```
+We wrap values going to the server in an `Envelope`
+```haskell
 toEnvelope :: ToJSON a => Value
 toEnvelope = toJSON . Envelope
+```
+We can lift functions.
+```
+liftEnvelop :: (Value -> IO (Wreq.Response ByteString))
+            -> ((ToJSON a, FromJSON b) => a -> IO b)
+liftEnvelop f = fromEnvelope . f . toEnvelope
+```
+We hide it's existence and specialize `wreq`'s' HTTP functions to operate on a JSON API.
+```
+jsonGet :: FromJSON a => Recorder -> String -> String -> IO a
+jsonGet recorder key = fromEnvelope $ record recorder key . Wreq.get
 
-wrapEnvelop :: (Value -> IO (Envelope Value)) -> ((ToJSON a, FromJSON b) => a -> IO b)
-wrapEnvelop f = fromEnvelope . f . toEnvelope
-
-apiGet :: FromJSON a => Recorder -> String -> String -> IO a
-apiGet recorder key = fromEnvelope  $ record recorder key . Wreq.get
-
-apiPost :: (ToJSON a, FromJSON b) => String -> String -> a -> IO b
-apiPost recorder key = wrapEnvelope $ record recorder key . Wreq.post 
+jsonPost :: (ToJSON a, FromJSON b)
+        => Recorder -> String -> String -> a -> IO b
+jsonPost recorder key url = liftEnvelope $ record recorder key . Wreq.post url
 ```
 
 Alright now it is time to make our client for out toy API.
@@ -89,20 +105,21 @@ instance FromJSON (RPC a b) where
   parseJSON = withText "FromJSON (Ref a)" RPC
 ```
 
-Next we utilize our api-verb functions and make specialized versions.
+Next we utilize our json-verb functions and make specialized versions.
 
 ```haskell
 
-
 get :: FromJSON a => Recorder -> String -> Ref a -> IO a
-get recorder key (Ref url) = apiGet recorder key url
+get recorder key (Ref url) = jsonGet recorder key url
 
 add :: (ToJSON a, FromJSON a) => Recorder -> String -> Ref [a] -> a -> IO (Ref [a])
-add recorder key (Ref url) = apiPost recorder key url 
+add recorder key (Ref url) = jsonPost recorder key url
 
 rpc :: (ToJSON a, FromJSON b) => Recorder -> String -> RPC a b -> a -> IO b
-rpc recorder key (RPC url) = apiPost recorder key url
+rpc recorder key (RPC url) = jsonPost recorder key url
 ```
+
+`get`, `add` and `rpc` our our toy API's verbs.
 
 The API requires an initial call to the '/root' to obtain the URLs for subsequent calls
 
@@ -111,10 +128,12 @@ rootRef :: Port -> Ref Root
 rootRef port = Ref $ "http://localhost:" ++ show port ++ "/root"
 ```
 
-                                                  Calling `GET` on `rootRef` returns the following JSON
-                                                                        |
-```haskell                                 --     --                    |
-data Root = Root                           --     --                    |
+    Calling `GET` on `rootRef` returns the following JSON  ----------
+                                                                    |
+                                                                    V
+
+```haskell                                                
+data Root = Root                           
   { products :: Ref [Ref Product]          --     -- { "products" : "http://localhost:3000/products"
   , carts    :: Ref [Ref Cart   ]          -- <=> -- , "carts"    : "http://localhost:3000/carts"
   , users    :: Ref [Ref User   ]          --     -- , "users"    : "http://localhost:3000/users"
@@ -125,62 +144,88 @@ data Root = Root                           --     --                    |
 
 Since the JSON is so uniform, we can use 'aeson' generic instances.
 
+Calling `GET` on a `Ref Product` gives
+
 ```haskell
 data Product = Product                     --     --
   { summary :: Text                        -- <=> -- { "summary" : "shirt" }
-  } deriving (Eq, Show, Generic, FromJSON) --     -- 
+  } deriving (Eq, Show, Generic, FromJSON) --     --
 ```
 
+Calling `GET` on a `Ref Cart` gives
+
 ```haskell
-data Cart = Cart                           --     -- 
+data Cart = Cart                           --     --
   { items :: Ref [Ref Product]             -- <=> -- { "items" : ["http://localhost:3000/products/0"] }
-  } deriving (Eq, Show, Generic, FromJSON) --     -- 
+  } deriving (Eq, Show, Generic, FromJSON) --     --
 ```
+
+Calling `GET` on a `Ref Cart` gives
 
 ```haskell
 data User = User                           --     --  
   { cart        :: Ref Cart                -- <=> -- { "cart"        : "http://localhost:3000/carts/0"
   , credentials :: Credentials             --     -- , "credentials" : { "user-name" : "example"
-                                           --     --                 , "password"  : "password" 
+                                           --     --                 , "password"  : "password"
                                            --     --                 }
   } deriving (Eq, Show, Generic, FromJSON) --     -- }
 ```
 
+We can now easily write our first script!
 
 ```haskell
 testScript :: Port -> Recorder -> IO ()
 testScript port recorder = do
+```
+First we make some copies of our api functions with `Recorder` partially applied.
+
+```haskell
   let get' = get recorder
-      add' = add recorder
-      rpc' = rpc recorder
+    add' = add recorder
+    rpc' = rpc recorder
 ```
 
-Get the root relations and unpack the resource refs for further calls
+Now we can use the copies without threading the recorder everywhere.
+
+Bootstrap the script and get all the urls for the endpoints. Unpack login and products.
 
 ```haskell
-
-  Root {login, products} <- get' "root"     (rootRef port)
-  userRef                <- rpc' "login"    login
-                                             ( Credentials
-                                               { userName = "a@example.com"
-                                               , password = "password"
-                                               }
-                                             )
-  User {cart }           <- get' "user"     userRef
-  Cart {items}           <- get' "cart"     cart
+  Root {login, products} <- get' "root" (rootRef port)
+```
+We get all products and name the first one
+```haskell
+  firstProduct : _ <- get' "products" products
 ```
 
+Login and get the user's ref.
 ```haskell
-  -- We get all products and name the first one
-  firstProduct : _       <- get' "products" products
-  _                      <- add' "items"    items    firstProduct
-  _                      <- rpc' "checkout" checkout cart
-
-  return ()
+  userRef <- rpc' "login" login
+                          ( Credentials
+                             { userName = "a@example.com"
+                             , password = "password"
+                             }
+                          )
+```
+Get the user and unpack the user's cart.
+```haskell
+  User { usersCart } <- get' "user" userRef
+```
+Get the cart unpack the items.
+```haskell
+  Cart { items } <- get' "cart" usersCart
+```
+Add the first product to the user's cart's items.
+```haskell
+  add' "items" items firstProduct
+```
+Checkout.
+```haskell
+  rpc' "checkout" checkout cart
 ```
 
 Port is hard coded to 3000 for this example
+
 ```haskell
 main :: IO ()
 main = defaultMain [("test0", testScript 3000 port)]
-```haskell
+```
