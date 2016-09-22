@@ -95,7 +95,7 @@ a `Recorder` so we can benchmark the times.
 ## Make a Some What Generic JSON API
 
 `wreq` is pretty easy to use for JSON APIs but it could be easier. Here we make
-a quick wrapper around `wreq` specialized to JSON and we utilize `wrecker`
+a quick wrapper around `wreq` specialized to JSON and we utilize `record`
 
 First, there is the ever popular `Envelope` type. On the right of the type
 definition is the JSON serialization.
