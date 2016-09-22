@@ -33,7 +33,7 @@ record :: Recorder -> String -> IO a -> IO a
 ```haskell
 import Data.Aeson
 ```
-We need JSON  so of course we are using `aeson`.
+We need JSON so of course we are using `aeson`.
 
 ```haskell
 import qualified Network.Wreq as Wreq
@@ -49,7 +49,7 @@ data Envelope a = Envelope { value :: a } -- <=> -- {"value" : toJSON a}
   deriving (Show, Eq, Generic, FromJSON)
 ```
 
-The `Envelope` is only exists to transmit data between the server and the browser.
+The `Envelope` only exists to transmit data between the server and the browser.
 
 
 We unwrap values coming from the server in `Envelope`.
@@ -64,8 +64,9 @@ toEnvelope = toJSON . Envelope
 ```
 We can lift functions.
 ```
-liftEnvelop :: (Value -> IO (Wreq.Response ByteString))
-            -> ((ToJSON a, FromJSON b) => a -> IO b)
+liftEnvelop :: (ToJSON a, FromJSON b)
+            => (Value -> IO (Wreq.Response ByteString))
+            -> (a     -> IO b)
 liftEnvelop f = fromEnvelope . f . toEnvelope
 ```
 We hide it's existence and specialize `wreq`'s' HTTP functions to operate on a JSON API.
@@ -73,29 +74,31 @@ We hide it's existence and specialize `wreq`'s' HTTP functions to operate on a J
 jsonGet :: FromJSON a => Recorder -> String -> String -> IO a
 jsonGet recorder key = fromEnvelope $ record recorder key . Wreq.get
 
-jsonPost :: (ToJSON a, FromJSON b)
-        => Recorder -> String -> String -> a -> IO b
+jsonPost :: (ToJSON a, FromJSON b) => Recorder -> String -> String -> a -> IO b
 jsonPost recorder key url = liftEnvelope $ record recorder key . Wreq.post url
 ```
 
-Alright now it is time to make our client for out toy API.
+Alright now it is time to make our client for our toy API.
 
-For our client we will represent resource urls using the type `Ref`
+Our client we will represent resource urls using the type `Ref`
 ```haskell
 data Ref a = Ref { unRef :: Text }
   deriving (Show, Eq)
 ```
 
-`Ref` is nothing more than a `Text` wrapper (the value there is the URL). `Ref` has polymorphic `a` so we can talk about different types of resources. It's use will become clearer later on.
+`Ref` is nothing more than a `Text` wrapper (the value there is the URL). `Ref`
+has polymorphic `a` so we can talk about different types of resources. It's use
+will become clearer later on.
+
+A `FromJSON` instance which wraps a `Text` value, assuming the JSON is `Text`.
 
 ```haskell
 instance FromJSON (Ref a) where
   parseJSON = withText "FromJSON (Ref a)" Ref
 ```
 
-A `FromJSON` instance which wraps a `Text` value, assuming the JSON is `Text`.
-
-In addition to resources our API has ad-hoc RPC calls. RPC calls are also represented as a URL.
+In addition to resources our API has ad-hoc RPC calls. RPC calls are also
+represented as a URL.
 
 ```haskell
 data RPC a b = RPC String
@@ -105,7 +108,7 @@ instance FromJSON (RPC a b) where
   parseJSON = withText "FromJSON (Ref a)" RPC
 ```
 
-Next we utilize our json-verb functions and make specialized versions.
+We utilize our `jsonGet` and `jsonPost` functions and make specialized versions.
 
 ```haskell
 
@@ -119,19 +122,18 @@ rpc :: (ToJSON a, FromJSON b) => Recorder -> String -> RPC a b -> a -> IO b
 rpc recorder key (RPC url) = jsonPost recorder key url
 ```
 
-`get`, `add` and `rpc` our our toy API's verbs.
-
-The API requires an initial call to the '/root' to obtain the URLs for subsequent calls
+The API requires an initial call to the "/root" to obtain the URLs for subsequent calls
 
 ```haskell
 rootRef :: Port -> Ref Root
 rootRef port = Ref $ "http://localhost:" ++ show port ++ "/root"
 ```
 
-    Calling `GET` on `rootRef` returns the following JSON  ----------
-                                                                    |
-                                                                    V
-
+    Calling `GET` on "/root" returns the following JSON  ----------
+                                                                  |
+    Represented here --                                           |
+                      |                                           |
+                      v                                           v
 ```haskell                                                
 data Root = Root                           
   { products :: Ref [Ref Product]          --     -- { "products" : "http://localhost:3000/products"
@@ -142,9 +144,9 @@ data Root = Root
   } deriving (Eq, Show, Generic, FromJSON) --     -- }
 ```
 
-Since the JSON is so uniform, we can use 'aeson' generic instances.
+Since the JSON is so uniform, we can use `aeson`s generic instances.
 
-Calling `GET` on a `Ref Product` gives
+Calling `GET` on a `Ref Product` or "/products/:id" gives
 
 ```haskell
 data Product = Product                     --     --
@@ -152,7 +154,7 @@ data Product = Product                     --     --
   } deriving (Eq, Show, Generic, FromJSON) --     --
 ```
 
-Calling `GET` on a `Ref Cart` gives
+Calling `GET` on a `Ref Cart` or "/carts/:id" gives
 
 ```haskell
 data Cart = Cart                           --     --
@@ -160,7 +162,7 @@ data Cart = Cart                           --     --
   } deriving (Eq, Show, Generic, FromJSON) --     --
 ```
 
-Calling `GET` on a `Ref Cart` gives
+Calling `GET` on a `Ref User` or "/users/:id" gives
 
 ```haskell
 data User = User                           --     --  
@@ -181,16 +183,16 @@ First we make some copies of our api functions with `Recorder` partially applied
 
 ```haskell
   let get' = get recorder
-    add' = add recorder
-    rpc' = rpc recorder
+      add' = add recorder
+      rpc' = rpc recorder
 ```
 
 Now we can use the copies without threading the recorder everywhere.
 
-Bootstrap the script and get all the urls for the endpoints. Unpack login and products.
+Bootstrap the script and get all the urls for the endpoints. Unpack `login` and `products`.
 
 ```haskell
-  Root {login, products} <- get' "root" (rootRef port)
+  Root { login, products } <- get' "root" (rootRef port)
 ```
 We get all products and name the first one
 ```haskell
