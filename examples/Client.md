@@ -6,14 +6,14 @@ interactions necessary to benchmark certain API endpoints.
 
 ## TL;DR
 
-`wrecker` let's you build beautiful API clients that you can use for profiling
+`wrecker` let's you build elegant API clients that you can use for profiling
 
 Here is the example we will build.
 
     testScript :: Int -> Recorder -> IO ()
     testScript port recorder = do
-      Root { login
-           , products
+      Root { products
+           , login
            , checkout
            }             <- get recorder "root"     (rootRef port)
       firstProduct : _   <- get recorder "products" products
@@ -52,9 +52,11 @@ This is Haskell, so first we turn on the extensions we would like to use.
 module WreckerSpec where
 ```
 
-`NamedFieldPuns` will let us destructure records conveniently. `DeriveAnyClass` and
-`DeriveGeneric` are used turned on so the compiler can generate the JSON
-conversion functions for us automatically.
+- `NamedFieldPuns` will let us destructure records conveniently. 
+- `DeriveAnyClass` and `DeriveGeneric` are used turned on so the compiler 
+  can generate the JSON conversion functions for us automatically.
+- `OverloadedStrings` is a here so redditors don't yell at me for using `String` instead of `Text`
+- `DuplicateRecordFields` let's us use the `username` field in two records ... welcome to the future.
 
 Now we import the packages necessary to make the client.
 
@@ -64,19 +66,18 @@ Now we import the packages necessary to make the client.
 import Wrecker (record, defaultMain, Recorder)
 ```
 
-`record` is the primary function from `wrecker`. It has the signature
+- `record` is the primary function from `wrecker`. It has the signature
 
     record :: Recorder -> String -> IO a -> IO a
 
-`record` takes a `Recorder` and key in the form of a `String` and wraps some
-`IO` action. `record` runs the passed in `IO a` and um ... records information
-about such as the elapsed time and whether it succeeded or failed.
-
-
-`defaultMain` is one of two entry points `wrecker` provides (the other is
-`run`). `defaultMain` performs command line argument parsing for us, and
-runs the benchmarks with the provided options. Additionally, `defaultMain`
-creates a `Recorder` that is used by all the benchmark scripts.
+  `record` takes a `Recorder` and key in the form of a `String` and wraps some
+  `IO` action. `record` runs the passed in `IO a` and um ... records information
+  about such as the elapsed time and whether it succeeded or failed.
+- `defaultMain` is one of two entry points `wrecker` provides (the other is
+  `run`). `defaultMain` performs command line argument parsing for us, and
+  runs the benchmarks with the provided options.
+- `Recorder` is an opaque type we can call `record` with. `defaultMain` and `run`
+  create a `Recorder` that is used by all the benchmark scripts.
 
 ```haskell
 import Data.Aeson
@@ -107,8 +108,10 @@ import Network.HTTP.Client (responseBody)
 `wreq` is pretty easy to use for JSON APIs but it could be easier. Here we make
 a quick wrapper around `wreq` specialized to JSON and we utilize `record`
 
-First, there is the ever popular `Envelope` type. On the right of the type
-definition is the JSON serialization.
+### The Envelope
+
+We wrap all JSON in sent to and from the server in an envelope, 
+mainly so we can also serialize a json object as opposed to an array.
 
 ```haskell
 data Envelope a = Envelope { value :: a } -- <=> -- {"value" : toJSON a}
@@ -116,29 +119,27 @@ data Envelope a = Envelope { value :: a } -- <=> -- {"value" : toJSON a}
 ```
 
 The `Envelope` only exists to transmit data between the server and the browser.
-
-We unwrap values coming from the server in `Envelope`.
-```haskell
-fromEnvelope :: FromJSON a => IO (Wreq.Response ByteString) -> IO a
-fromEnvelope x = fmap (value . responseBody) . Wreq.asJSON =<< x
-```
-We wrap values going to the server in an `Envelope`
-```haskell
-toEnvelope :: ToJSON a => a -> Value
-toEnvelope = toJSON . Envelope
-```
-We can wrap functions too.
-```haskell
-liftEnvelope :: (ToJSON a, FromJSON b)
-            => (Value -> IO (Wreq.Response ByteString))
-            -> (a     -> IO b                         )
-liftEnvelope f = fromEnvelope . f . toEnvelope
-```
+- We wrap values going to the server in an `Envelope`
+  ```haskell
+  toEnvelope :: ToJSON a => a -> Value
+  toEnvelope = toJSON . Envelope
+  ```
+- We unwrap values coming from the server in `Envelope`.
+  ```haskell
+  fromEnvelope :: FromJSON a => IO (Wreq.Response ByteString) -> IO a
+  fromEnvelope x = fmap (value . responseBody) . Wreq.asJSON =<< x
+  ```
+- If we wrap inputs and unwrap outputs we can wrap a whole function.
+  ```haskell
+  liftEnvelope :: (ToJSON a, FromJSON b)
+               => (Value -> IO (Wreq.Response ByteString))
+               -> (a     -> IO b                         )
+  liftEnvelope f = fromEnvelope . f . toEnvelope
+  ```
 
 ### Wrap HTTP Calls with `record`
 
-We hide it's existence and specialize `wreq`'s' HTTP functions to operate on
-our JSON API.
+Not only do we want to wrap and unwrap types from our `Envelope`, we also need to wrap api calls with `record`.
 
 ```haskell 
 jsonGet :: FromJSON a => Recorder -> String -> Text -> IO a
@@ -152,7 +153,7 @@ jsonPost recorder key url = liftEnvelope $ record recorder key . Wreq.post (T.un
 
 ### Resource References
 
-Our client we will represent resource urls using the type `Ref`
+We represent resource urls using the type `Ref`
 ```haskell
 data Ref a = Ref { unRef :: Text }
   deriving (Show, Eq)
@@ -193,16 +194,23 @@ instance FromJSON (RPC a b) where
 We utilize our `jsonGet` and `jsonPost` functions and make specialized versions
 for our more specific REST and RPC calls.
 
-```haskell
-get :: FromJSON a => Recorder -> String -> Ref a -> IO a
-get recorder key (Ref url) = jsonGet recorder key url
-
-insert :: (ToJSON a, FromJSON a) => Recorder -> String -> Ref [a] -> a -> IO (Ref [a])
-insert recorder key (Ref url) = jsonPost recorder key url
-
-rpc :: (ToJSON a, FromJSON b) => Recorder -> String -> RPC a b -> a -> IO b
-rpc recorder key (RPC url) = jsonPost recorder key url
-```
+- `get` takes a `Ref a` and returns an `a`. The `a` could be something 
+  like `Cart` or it could be a list like `[Ref a]`.
+  ```haskell
+  get :: FromJSON a => Recorder -> String -> Ref a -> IO a
+  get recorder key (Ref url) = jsonGet recorder key url
+  ```
+- `insert` takes a `Ref` to a list and appends an item to it. It returns the 
+  reference that you passed in because why not.
+  ```haskell
+  insert :: (ToJSON a, FromJSON a) => Recorder -> String -> Ref [a] -> a -> IO (Ref [a])
+  insert recorder key (Ref url) = jsonPost recorder key url
+  ```
+- `rpc` unpacks the URL for the RPC endpoint and `POST`s the input, returning the output.
+  ```haskell
+  rpc :: (ToJSON a, FromJSON b) => Recorder -> String -> RPC a b -> a -> IO b
+  rpc recorder key (RPC url) = jsonPost recorder key url
+  ```
 
 ## The Example API
 
@@ -258,11 +266,15 @@ data User = User                           --     --
   } deriving (Eq, Show, Generic, FromJSON) --     -- }
 ```
 
+## RPC Types
+
+The only additional type that we need is the input for the `login` RPC, mainly the `Credentials` type.
+
 ```haskell
-data Credentials = Credentials 
-  { password :: Text
-  , username :: Text
-  } deriving (Eq, Show, Generic, ToJSON)
+data Credentials = Credentials             --     --
+  { password :: Text                       -- <=> -- { "password" : "password"
+  , username :: Text                       --     -- , "username" : "a@example.com"
+  } deriving (Eq, Show, Generic, ToJSON)   --     -- }
 ```
 
 ## Profiling Script
@@ -277,7 +289,9 @@ Bootstrap the script and get all the URLs for the endpoints. Unpack `login`,
 `products` and `checkout` for use later down.
 
 ```haskell
-  Root { login, products, checkout } <- get recorder "root" (rootRef port)
+  Root { products
+       , login
+       , checkout } <- get recorder "root" (rootRef port)
 ```
 We get all products and name the first one
 ```haskell
