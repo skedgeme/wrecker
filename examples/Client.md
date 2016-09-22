@@ -120,16 +120,21 @@ data Envelope a = Envelope { value :: a } -- <=> -- {"value" : toJSON a}
 
 The `Envelope` only exists to transmit data between the server and the browser.
 - We wrap values going to the server in an `Envelope`
+    
     ```haskell
     toEnvelope :: ToJSON a => a -> Value
     toEnvelope = toJSON . Envelope
     ```
+    
 - We unwrap values coming from the server in `Envelope`.
+    
     ```haskell
     fromEnvelope :: FromJSON a => IO (Wreq.Response ByteString) -> IO a
     fromEnvelope x = fmap (value . responseBody) . Wreq.asJSON =<< x
     ```
+    
 - If we wrap inputs and unwrap outputs we can wrap a whole function.
+    
     ```haskell
     liftEnvelope :: (ToJSON a, FromJSON b)
                  => (Value -> IO (Wreq.Response ByteString))
@@ -196,17 +201,20 @@ for our more specific REST and RPC calls.
 
 - `get` takes a `Ref a` and returns an `a`. The `a` could be something 
   like `Cart` or it could be a list like `[Ref a]`.
+    
     ```haskell
     get :: FromJSON a => Recorder -> String -> Ref a -> IO a
     get recorder key (Ref url) = jsonGet recorder key url
     ```
 - `insert` takes a `Ref` to a list and appends an item to it. It returns the 
   reference that you passed in because why not.
+    
     ```haskell
     insert :: (ToJSON a, FromJSON a) => Recorder -> String -> Ref [a] -> a -> IO (Ref [a])
     insert recorder key (Ref url) = jsonPost recorder key url
     ```
 - `rpc` unpacks the URL for the RPC endpoint and `POST`s the input, returning the output.
+    
     ```haskell
     rpc :: (ToJSON a, FromJSON b) => Recorder -> String -> RPC a b -> a -> IO b
     rpc recorder key (RPC url) = jsonPost recorder key url
