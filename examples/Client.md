@@ -40,7 +40,7 @@ Most of the code in this file is "generic". It is the type of boilerplate you
 make once for an API client.
 
 You don't need to make a polish API client to use `wrecker`, just look at
-TODO_MAKE_AESON_LENS_EXAMPLE to see how to use recorder with less setup.
+TODO_MAKE_AESON_LENS_EXAMPLE to see how to use `record` with less setup.
 
 ## Boring Haskell Prelude
 
