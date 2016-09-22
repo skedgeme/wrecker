@@ -112,33 +112,35 @@ We convert this to the following Haskell type:
 
 ```haskell
 data Root = Root
-  { products :: Ref [Ref Product]
-  , carts    :: Ref [Ref Cart   ]
-  , users    :: Ref [Ref User   ]
-  , login    :: RPC Credentials (Ref User)
-  , checkout :: RPC (Ref Cart)  ()
-  } deriving (Eq, Show, Generic, FromJSON)
+  { products :: Ref [Ref Product]          -     - { "products" : "http://localhost:3000/products"
+  , carts    :: Ref [Ref Cart   ]          -     - , "carts"    : "http://localhost:3000/carts"
+  , users    :: Ref [Ref User   ]          -     - , "users"    : "http://localhost:3000/users"
+  , login    :: RPC Credentials (Ref User) -     - , "login"    : "http://localhost:3000/login"
+  , checkout :: RPC (Ref Cart)  ()         -     - , "checkout"    : "http://localhost:3000/checkout"
+  } deriving (Eq, Show, Generic, FromJSON) -     - }
 ```
 
 Since the JSON is so uniform, we can use 'aeson' generic instances.
 
 ```haskell
-data Product = Product
-  { summary :: Text
-  } deriving (Eq, Show, Generic, FromJSON)
+data Product = Product                     -     -
+  { summary :: Text                        - <=> - { "summary" : "shirt" }
+  } deriving (Eq, Show, Generic, FromJSON) -     - 
 ```
 
 ```haskell
-data Cart = Cart
-  { items :: Ref [Ref Product]
-  } deriving (Eq, Show, Generic, FromJSON)
+data Cart = Cart                           -     - 
+  { items :: Ref [Ref Product]             - <=> - { "items" : 
+  } deriving (Eq, Show, Generic, FromJSON) -     - 
 ```
 
 ```haskell
-data User = User
-  { cart        :: Ref Cart
-  , credentials :: Credentials
-  } deriving (Eq, Show, Generic, FromJSON)
+data User = User                           -     -  
+  { cart        :: Ref Cart                - <=> - { "cart"        : "http://localhost:3000/cart/0"
+  , credentials :: Credentials             -     - , "credentials" : { "user-name" : "example"
+                                                                     , "password"  : "password" 
+                                                                     }
+  } deriving (Eq, Show, Generic, FromJSON) -     - }
 ```
 
 ```haskell
