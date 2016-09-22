@@ -57,6 +57,8 @@ conversion functions for us automatically.
 
 Now we import the packages necessary to make the client.
 
+### The Essence of `wrecker` is `record`
+
 ```haskell
 import Wrecker (record, defaultMain)
 ```
