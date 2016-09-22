@@ -300,7 +300,8 @@ Bootstrap the script and get all the URLs for the endpoints. Unpack
 ```haskell
   Root { products
        , login
-       , checkout } <- get recorder "root" (rootRef port)
+       , checkout 
+       } <- get recorder "root" (rootRef port)
 ```
 We get all products and name the first one
 ```haskell
