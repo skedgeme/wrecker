@@ -294,8 +294,8 @@ We can now easily write our first script!
 testScript :: Int -> Recorder -> IO ()
 testScript port recorder = do
 ```
-Bootstrap the script and get all the URLs for the endpoints. Unpack `login`,
-`products` and `checkout` for use later down.
+Bootstrap the script and get all the URLs for the endpoints. Unpack 
+`products`, `login` and `checkout` for use later down.
 
 ```haskell
   Root { products
