@@ -116,7 +116,7 @@ data Root = Root
   , carts    :: Ref [Ref Cart   ]          -     - , "carts"    : "http://localhost:3000/carts"
   , users    :: Ref [Ref User   ]          -     - , "users"    : "http://localhost:3000/users"
   , login    :: RPC Credentials (Ref User) -     - , "login"    : "http://localhost:3000/login"
-  , checkout :: RPC (Ref Cart)  ()         -     - , "checkout"    : "http://localhost:3000/checkout"
+  , checkout :: RPC (Ref Cart)  ()         -     - , "checkout" : "http://localhost:3000/checkout"
   } deriving (Eq, Show, Generic, FromJSON) -     - }
 ```
 
