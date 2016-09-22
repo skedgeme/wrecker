@@ -68,8 +68,8 @@ import Wrecker (record, defaultMain, Recorder)
 
 - `record` is the primary function from `wrecker`. It has the signature
 
-    record :: Recorder -> String -> IO a -> IO a
-
+     record :: Recorder -> String -> IO a -> IO a
+    
   `record` takes a `Recorder` and key in the form of a `String` and wraps some
   `IO` action. `record` runs the passed in `IO a` and um ... records information
   about such as the elapsed time and whether it succeeded or failed.
