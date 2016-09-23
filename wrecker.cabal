@@ -63,8 +63,31 @@ library
   default-language:    Haskell2010
   ghc-options:         -Wall -fno-warn-unused-do-bind -pgmL markdown-unlit
 
-test-suite example-client
-  type:                exitcode-stdio-1.0
+executable example-server
+  hs-source-dirs:      examples
+  main-is:             Server.hs
+  build-depends:       base
+                     , wrecker
+                     , hspec
+                     , hspec-discover
+                     , scotty
+                     , aeson-qq
+                     , transformers
+                     , warp
+                     , data-default
+                     , wreq
+                     , markdown-unlit
+                     , aeson
+                     , bytestring
+                     , text
+                     , http-client
+                     , reflection
+                     , lens
+                     , constraints
+                     , mwc-random
+                     , statistics
+
+executable example-client
   hs-source-dirs:      examples
   main-is:             Client.lhs
   build-depends:       base
@@ -82,6 +105,11 @@ test-suite example-client
                      , bytestring
                      , text
                      , http-client
+                     , reflection
+                     , lens
+                     , constraints
+                     , mwc-random
+                     , statistics
   ghc-options:         -threaded -pgmL markdown-unlit -rtsopts -with-rtsopts=-N 
   default-language:    Haskell2010
 

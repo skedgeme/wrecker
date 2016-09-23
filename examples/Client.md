@@ -49,7 +49,6 @@ This is Haskell, so first we turn on the extensions we would like to use.
            , OverloadedStrings 
            , DuplicateRecordFields
 #-}
-module WreckerSpec where
 ```
 
 - `NamedFieldPuns` will let us destructure records conveniently. 
