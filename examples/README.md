@@ -28,7 +28,7 @@ testScript port recorder = do
   rpc "checkout" checkout cart
 ```
 
-For this example `stub`<sup>[1](#footnote1)</sup><sup>[2](#footnote2)</sup> server.
+For this example `stub`<sup>[1](#footnote1)</sup> <sup>[2](#footnote2)</sup> server.
 
 ```json
 { "products"        : ["http://localhost:3000/products/0"]
@@ -45,8 +45,6 @@ For this example `stub`<sup>[1](#footnote1)</sup><sup>[2](#footnote2)</sup> serv
 
 ### Output
 
-Output from running
-
 ```bash
 cabal run example -- --concurrency=20 --run-count=4 --display-mode=Interactive
 ```
@@ -61,7 +59,7 @@ cabal run example -- --concurrency=20 --run-count=4 --display-mode=Interactive
 
 # How to Use `wrecker` to Write Your Own Benchmarks
 
-[See this literate Haskell file here] (https://github.com/skedgeme/wrecker/blob/example-progress/examples/Client.md)
+[The documentation for Client.lhs is also a tutorial. Click here.] (/examples/Client.md)
 
 # examples/Main.lhs Implementation
 ```haskell
@@ -100,6 +98,7 @@ waitFor port = do
                                            Nothing
             connectionClose connection
 ```
+We start the [server](/examples/Server.hs) and then when it is ready we start the `wrecker` [client](/examples/Client.md)
 
 ```
 main :: IO ()
@@ -109,7 +108,6 @@ main = do
 
  -- The examples use port 3000 by default
  let port = 3000
-
 
  options <- runParser
  -- wait for the server to be ready
