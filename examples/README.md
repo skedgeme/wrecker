@@ -1,7 +1,7 @@
 ### `wrecker`
 `wrecker` is a HTTP benchmarking library for profiling several API actions.
 
-`wrecker`'s API types are type alias, so clients can conform to the interface without depending on the `wrecker` package. 
+`wrecker`'s API types are type alias, so clients can conform to the interface without depending on the `wrecker` package.
 
 ### Example
 
@@ -28,24 +28,24 @@ testScript port recorder = do
   rpc "checkout" checkout cart
 ```
 
-For this example `stub`[1][2] server.
+For this example `stub`[^1][^2] server.
 
 ```json
- { "products"         : ["http://localhost:3000/products/0"]
- , "product/:id"      : { "summary" : "shirt" }
- , "carts"            : ["http://localhost:3000/carts/0"]
- , "carts/:id"        : { "items" : "http://localhost:3000/carts/0/items" }
- , "carts/:id/items" : []
- , "users"           : ["http://localhost:3000/users/0"]
- , "users/:id"       : { "cart"     : "http://localhost:3000/carts/0" 
-                       , "username" : "example"
-                       }
+{ "products"        : ["http://localhost:3000/products/0"]
+, "product/:id"     : { "summary" : "shirt" }
+, "carts"           : ["http://localhost:3000/carts/0"]
+, "carts/:id"       : { "items" : "http://localhost:3000/carts/0/items" }
+, "carts/:id/items" : []
+, "users"           : ["http://localhost:3000/users/0"]
+, "users/:id"       : { "cart"     : "http://localhost:3000/carts/0"
+                   , "username" : "example"
+                   }
 }
 ```
 
 ### Output
 
-Output from running 
+Output from running
 
 ```bash
 cabal run example -- --concurrency=20 --run-count=4 --display-mode=Interactive
@@ -55,21 +55,13 @@ cabal run example -- --concurrency=20 --run-count=4 --display-mode=Interactive
 
 
 ### Running Examples
- - To run whole benchmark example `cabal run example` 
-   - `cabal run example -- --help` for help
-   - `cabal run example -- --concurrency=30 --run-count=5 --display-mode=Interactive` for something more interesting.
+ - To run whole benchmark example `cabal run example`
  - Just the client `cabal run example-client `
-   - `cabal run example-client -- --help` for help
- - Just the server `cabal run example-client` 
-   - ...
+ - Just the server `cabal run example-server`
 
-# How To Use
+# How to Use `wrecker` to Write Your Own Benchmarks
 
-See this literate haskell file here [https://github.com/skedgeme/wrecker/blob/example-progress/examples/Client.md] 
-
-[1] See Martin Fowler Stackoverflow *highest ranked answer* [http://stackoverflow.com/questions/346372/whats-the-difference-between-faking-mocking-and-stubbing] 
-
-[2] Converting to a `fake` is left as an exercise.
+[See this literate Haskell file here] (https://github.com/skedgeme/wrecker/blob/example-progress/examples/Client.md)
 
 # examples/Main.lhs Implementation
 ```haskell
@@ -91,30 +83,48 @@ import Network.Connection ( connectTo
                           , initConnectionContext
                           )
 import Control.Monad (void)
+```
 
-waitFor3000 :: IO ()
-waitFor3000 = do 
+A little utility function which loops until a port is ready for connections.
+
+```haskell
+waitFor :: Int -> IO ()
+waitFor port = do
     cxt <- initConnectionContext
-    fix $ \next -> do 
+    fix $ \next -> do
         handle (\(e :: IOException) -> threadDelay 100000 >> next) $ do
-            connection <- connectTo cxt $ ConnectionParams "localhost" 
-                                                       3000 
-                                                       Nothing 
-                                                       Nothing
-            connectionClose connection 
-    
+            connection <- connectTo cxt
+                        $ ConnectionParams "localhost"
+                                           port
+                                           Nothing
+                                           Nothing
+            connectionClose connection
+```
 
+```
 main :: IO ()
-main = do 
+main = do
+ -- Start the server on it's own thread
  forkIO $ Server.main
- 
- waitFor3000 
+
+ -- The examples use port 3000 by default
+ let port = 3000
+
+
  options <- runParser
+ -- wait for the server to be ready
+ waitFor port
+
+ -- Start the client and close an MVar to signal when the thread has finished
  end <- newEmptyMVar
- result <- forkIO $ do 
-     run options $ Client.benchmarks 3000
+ result <- forkIO $ do
+     run options $ Client.benchmarks port
      putMVar end ()
- 
+
+ -- Wait for the client thread to finish and then return
  takeMVar end
 ```
 
+[^1]: See Martin Fowler Stackoverflow *highest ranked answer* [http://stackoverflow.com/questions/346372/whats-the-difference-between-faking-mocking-and-stubbing]
+
+[^2]: Converting to a `fake` is left as an exercise.
