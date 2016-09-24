@@ -58,7 +58,7 @@ For this example `stub`[1][2] server.
 
 # How To Use
 
-See this literate haskell file here (http://) 
+See this literate haskell file here [https://github.com/skedgeme/wrecker/blob/example-progress/examples/Client.md] 
 
 [1] See Martin Fowler Stackoverflow *highest ranked answer* [http://stackoverflow.com/questions/346372/whats-the-difference-between-faking-mocking-and-stubbing] 
 [2] Converting to a `fake` is left as an exercise.
