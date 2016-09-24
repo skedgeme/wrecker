@@ -51,7 +51,7 @@ Output from running
 cabal run example -- --concurrency=20 --run-count=4 --display-mode=Interactive
 ```
 
-![Example terminal output](/example.gif?raw=true "Example Terminal Output")
+![Example terminal output](/examples/example.gif?raw=true "Example Terminal Output")
 
 
 ### Running Examples
