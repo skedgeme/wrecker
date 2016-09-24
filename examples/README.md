@@ -1,7 +1,7 @@
 ### `wrecker`
 `wrecker` is a HTTP benchmarking library for profiling several API actions.
 
-`wrecker`'s API types are type classes, so clients can conform to the interface without depending on the `wrecker` package. 
+`wrecker`'s API types are type alias, so clients can conform to the interface without depending on the `wrecker` package. 
 
 ### Example
 
