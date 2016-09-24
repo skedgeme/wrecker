@@ -45,18 +45,23 @@ For this example `stub`[1][2] server.
 
 ### Output
 
+Output from running 
 
+```bash
+cabal run example -- --concurrency=20 --run-count=4 --display-mode=Interactive
+```
 
+![Example terminal output](/example.gif?raw=true "Example Terminal Output")
 
 
 ### Running Examples
-- To run whole benchmark example `cabal run example` 
--- `cabal run example -- --help` for help
--- `cabal run example -- --concurrency=30 --run-count=5 --display-mode=Interactive` for something more interesting.
-- Just the client `cabal run example-client `
--- `cabal run example-client -- --help` for help
-- Just the server `cabal run example-client` 
--- ...
+ - To run whole benchmark example `cabal run example` 
+   - `cabal run example -- --help` for help
+   - `cabal run example -- --concurrency=30 --run-count=5 --display-mode=Interactive` for something more interesting.
+ - Just the client `cabal run example-client `
+   - `cabal run example-client -- --help` for help
+ - Just the server `cabal run example-client` 
+   - ...
 
 # How To Use
 
