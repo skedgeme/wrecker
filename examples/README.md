@@ -28,7 +28,7 @@ testScript port recorder = do
   rpc "checkout" checkout cart
 ```
 
-For this example `stub`[^1][^2] server.
+For this example `stub`<sup>[1](#footnote1)</sup><sup>[2](#footnote2)</sup> server.
 
 ```json
 { "products"        : ["http://localhost:3000/products/0"]
@@ -38,8 +38,8 @@ For this example `stub`[^1][^2] server.
 , "carts/:id/items" : []
 , "users"           : ["http://localhost:3000/users/0"]
 , "users/:id"       : { "cart"     : "http://localhost:3000/carts/0"
-                   , "username" : "example"
-                   }
+                    , "username" : "example"
+                    }
 }
 ```
 
@@ -125,6 +125,6 @@ main = do
  takeMVar end
 ```
 
-[^1]: See Martin Fowler Stackoverflow *highest ranked answer* [http://stackoverflow.com/questions/346372/whats-the-difference-between-faking-mocking-and-stubbing]
+<a name="footnote1">1</a>: See Martin Fowler Stackoverflow *highest ranked answer* [http://stackoverflow.com/questions/346372/whats-the-difference-between-faking-mocking-and-stubbing]
 
-[^2]: Converting to a `fake` is left as an exercise.
+<a name="footnote1">2</a>: Converting to a `fake` is left as an exercise.
