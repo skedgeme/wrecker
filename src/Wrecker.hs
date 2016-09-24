@@ -16,6 +16,7 @@ module Wrecker ( Recorder
                , run
                , Options (..)
                , defaultOptions
+               , runParser
                ) where
 import Wrecker.Recorder
 import Wrecker.Main

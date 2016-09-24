@@ -48,6 +48,7 @@ This is Haskell, so first we turn on the extensions we would like to use.
            , DeriveGeneric
            , OverloadedStrings 
            , DuplicateRecordFields
+           , CPP
 #-}
 ```
 
@@ -57,9 +58,17 @@ This is Haskell, so first we turn on the extensions we would like to use.
 - `OverloadedStrings` is a here so redditors don't yell at me for using `String` instead of `Text`
 - `DuplicateRecordFields` let's us use the `username` field in two records ... welcome to the future.
 
-Now we import the packages necessary to make the client.
+```haskell
+#ifndef _CLIENT_IS_MAIN_ 
+module Client where
+#endif
+```
+Not the drones ...
+
 
 ### The Essence of `wrecker` is `record`
+
+Introducing `wrecker`
 
 ```haskell
 import Wrecker (record, defaultMain, Recorder)
@@ -336,6 +345,9 @@ Checkout.
 Port is hard coded to 3000 for this example
 
 ```haskell
+benchmarks :: Int -> [(String, Recorder -> IO ())]
+benchmarks port = [("test0", testScript port)]
+
 main :: IO ()
-main = defaultMain [("test0", testScript 3000)]
+main = defaultMain $ benchmarks 3000
 ```

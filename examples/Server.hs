@@ -1,4 +1,19 @@
-{-# LANGUAGE ScopedTypeVariables, TypeOperators, OverloadedStrings, DeriveGeneric, FlexibleInstances, QuasiQuotes, DeriveAnyClass, CPP, FlexibleContexts, UndecidableInstances #-}
+{-# LANGUAGE ScopedTypeVariables
+           , TypeOperators
+           , OverloadedStrings
+           , DeriveGeneric
+           , FlexibleInstances
+           , QuasiQuotes
+           , DeriveAnyClass
+           , CPP
+           , FlexibleContexts
+           , UndecidableInstances 
+#-}
+
+#ifndef _SERVER_IS_MAIN_
+module Server where
+#endif
+
 import Web.Scotty (ScottyM, ActionM, json)
 import Control.Concurrent
 import Data.Aeson.QQ

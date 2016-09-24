@@ -86,6 +86,9 @@ executable example-server
                      , constraints
                      , mwc-random
                      , statistics
+  cpp-options: -D_SERVER_IS_MAIN_ 
+  ghc-options: -threaded -pgmL markdown-unlit -rtsopts -with-rtsopts=-N 
+  default-language:    Haskell2010
 
 executable example-client
   hs-source-dirs:      examples
@@ -110,7 +113,35 @@ executable example-client
                      , constraints
                      , mwc-random
                      , statistics
-  ghc-options:         -threaded -pgmL markdown-unlit -rtsopts -with-rtsopts=-N 
+  cpp-options: -D_CLIENT_IS_MAIN_
+  ghc-options: -threaded -pgmL markdown-unlit -rtsopts -with-rtsopts=-N 
+  default-language:    Haskell2010
+  
+executable example
+  hs-source-dirs:      examples
+  main-is:             Main.lhs
+  build-depends:       base
+                     , wrecker
+                     , hspec
+                     , hspec-discover
+                     , scotty
+                     , aeson-qq
+                     , transformers
+                     , warp
+                     , data-default
+                     , wreq
+                     , markdown-unlit
+                     , aeson
+                     , bytestring
+                     , text
+                     , http-client
+                     , reflection
+                     , lens
+                     , constraints
+                     , mwc-random
+                     , statistics
+                     , connection
+  ghc-options:         -threaded -pgmL markdown-unlit  -rtsopts -with-rtsopts=-N 
   default-language:    Haskell2010
 
 test-suite wrecker-test
@@ -128,5 +159,5 @@ test-suite wrecker-test
                      , data-default
                      , wreq
                      , markdown-unlit
-  ghc-options:         -threaded -pgmL markdown-unlit -rtsopts -with-rtsopts=-N 
+  ghc-options:         -threaded  -pgmL markdown-unlit -rtsopts -with-rtsopts=-N 
   default-language:    Haskell2010
