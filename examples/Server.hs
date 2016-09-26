@@ -13,6 +13,7 @@
            , LambdaCase
            , RecursiveDo
            , OverloadedStrings
+           , TupleSections
 #-}
 
 #ifndef _SERVER_IS_MAIN_
@@ -51,7 +52,8 @@ import qualified Wrecker.Runner as Wrecker
 import qualified Wrecker.Statistics as Wrecker
 import qualified Network.Wai.Handler.Warp as Warp
 import qualified Network.Wai as Wai
-import Network.Socket
+import Network.Socket (Socket)
+import qualified Network.Socket as N
 
 newtype Envelope a = Envelope { value :: a }
   deriving (Show, Eq, Generic, ToJSON)
@@ -192,7 +194,12 @@ recordMiddleware recorder app req sendResponse
   
 getASocket :: Maybe Port -> IO (Port, Socket)
 getASocket = \case
-  Just port -> undefined
+  Just port -> do s <- N.socket N.AF_INET N.Stream N.defaultProtocol
+                  localhost <- N.inet_addr "127.0.0.1"
+                  N.bind s (N.SockAddrInet (fromIntegral port) localhost)
+                  N.listen s 1
+                  return (port, s)  
+                  
   Nothing   -> openFreePort
   
 start :: Maybe Port -> RootInt -> IO ( Port
@@ -205,9 +212,10 @@ start mport dist = do
   
   (ref, recorderThread, recorder) <- newStandaloneRecorder
   scottyApp <- Scotty.scottyApp $ app dist port
-  threadId <- forkIO $ Warp.runSettingsSocket defaultSettings socket 
-                     $ recordMiddleware recorder
-                     $ scottyApp
+  threadId <- flip forkFinally (\_ -> N.close socket) 
+            $ Warp.runSettingsSocket defaultSettings socket 
+            $ recordMiddleware recorder
+            $ scottyApp
 
   return (port, recorderThread, threadId, ref)
 
