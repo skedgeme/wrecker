@@ -207,7 +207,7 @@ renderHistogram bins = renderPV $ U.toList powers where
 statToRow :: ResultStatistics -> [String]
 statToRow x 
   = [ printf "%.4f" $ mean     $ rs2xx x
-    , printf "%.4f" $ variance $ rs2xx x
+    , printf "%.8f" $ variance $ rs2xx x
     , printf "%.4f" $ sMax     $ rs2xx x
     , printf "%.4f" $ sMin     $ rs2xx x
     , show $ count2xx x

@@ -18,6 +18,8 @@ data Logger = Logger
   , currentLevel :: LogLevel
   }
 
+
+
 newLogger :: Handle -> Int -> LogLevel -> IO Logger
 newLogger handle maxSize currentLevel = do 
   (inChan, outChan) <- U.newChan maxSize

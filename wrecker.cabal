@@ -60,6 +60,7 @@ library
                , ansi-terminal
                , unagi-chan
                , next-ref
+               , immortal
   default-language:    Haskell2010
   ghc-options:         -Wall -fno-warn-unused-do-bind -pgmL markdown-unlit
 
@@ -86,6 +87,10 @@ executable example-server
                      , constraints
                      , mwc-random
                      , statistics
+                     , immortal
+                     , next-ref
+                     , wai
+                     , network
   cpp-options: -D_SERVER_IS_MAIN_ 
   ghc-options: -threaded -pgmL markdown-unlit -rtsopts -with-rtsopts=-N 
   default-language:    Haskell2010
@@ -141,23 +146,44 @@ executable example
                      , mwc-random
                      , statistics
                      , connection
-  ghc-options:         -threaded -pgmL markdown-unlit  -rtsopts -with-rtsopts=-N 
+                     , immortal
+                     , next-ref
+                     , wai
+                     , network
+  ghc-options:         -O2 -threaded -pgmL markdown-unlit  -rtsopts -with-rtsopts=-N 
   default-language:    Haskell2010
 
 test-suite wrecker-test
   type:                exitcode-stdio-1.0
-  hs-source-dirs:      test
+  hs-source-dirs:      test, examples
   main-is:             Spec.hs
-  build-depends:       base
-                     , wrecker
-                     , hspec
-                     , hspec-discover
-                     , scotty
-                     , aeson-qq
-                     , transformers
-                     , warp
-                     , data-default
-                     , wreq
-                     , markdown-unlit
-  ghc-options:         -threaded  -pgmL markdown-unlit -rtsopts -with-rtsopts=-N 
+  build-depends: base
+               , wrecker
+               , hspec
+               , hspec-discover
+               , scotty
+               , aeson-qq
+               , transformers
+               , warp
+               , data-default
+               , wreq
+               , markdown-unlit
+               , aeson
+               , bytestring
+               , text
+               , http-client
+               , reflection
+               , lens
+               , constraints
+               , mwc-random
+               , statistics
+               , connection
+               , unordered-containers
+               , clock-extras
+               , vector
+               , wai
+               , network
+               , immortal
+               , next-ref
+  ghc-options:        -O2 -threaded  -pgmL markdown-unlit -rtsopts -with-rtsopts=-N 
   default-language:    Haskell2010

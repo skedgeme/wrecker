@@ -24,7 +24,24 @@ import Data.Aeson (encode)
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.HashMap.Strict as H
 import Data.HashMap.Strict (HashMap)
+import qualified Control.Immortal as Immortal
 -- TODO configure whether errors are used in times or not
+
+newStandaloneRecorder :: IO (NextRef AllStats, Immortal.Thread, Recorder)
+newStandaloneRecorder = do
+  recorder      <- newRecorder 10000
+  logger        <- newStdErrLogger 1000 LevelError 
+  (ref, thread) <- sinkRecorder logger recorder
+  return (ref, thread, recorder)
+
+sinkRecorder :: Logger -> Recorder -> IO (NextRef AllStats, Immortal.Thread)
+sinkRecorder logger recorder = do 
+  ref <- newNextRef emptyAllStats
+  
+  immortal <- Immortal.createWithLabel "collectEvent" 
+            $ \_ -> collectEvent logger ref recorder
+  
+  return (ref, immortal)
 
 updateSampler :: NextRef AllStats -> Event -> IO AllStats
 updateSampler !ref !event = modifyNextRef ref
@@ -203,7 +220,7 @@ run options actions = do
   fmap H.fromList . forM actions $ \(groupName, action) -> do
     if (match options `isInfixOf` groupName) then do
       putStrLn groupName
-      (groupName, ) <$> case displayMode options of
+      (groupName, ) <$> case displayMode options of  
         NonInteractive -> runNonInteractive options action
         Interactive    -> runInteractive    options action
     else

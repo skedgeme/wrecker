@@ -14,11 +14,17 @@ module Wrecker ( Recorder
                , defaultMain 
                , record
                , run
-               , Options (..)
+               , Options          (..)
+               , RunType          (..)
+               , DisplayMode      (..)
                , defaultOptions
                , runParser
+               , AllStats         (..)
+               , ResultStatistics (..)
+               , newStandaloneRecorder
                ) where
 import Wrecker.Recorder
 import Wrecker.Main
 import Wrecker.Options
 import Wrecker.Runner
+import Wrecker.Statistics

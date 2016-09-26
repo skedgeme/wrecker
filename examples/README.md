@@ -28,7 +28,7 @@ testScript port recorder = do
   rpc "checkout" checkout cart
 ```
 
-For this example `stub`<sup>[1](#footnote1)</sup> <sup>[2](#footnote2)</sup> server.
+For this example `stub`<sup>1</sup> <sup>2</sup> server.
 
 ```json
 { "products"        : ["http://localhost:3000/products/0"]
@@ -45,6 +45,8 @@ For this example `stub`<sup>[1](#footnote1)</sup> <sup>[2](#footnote2)</sup> ser
 
 ### Output
 
+Output from running
+
 ```bash
 cabal run example -- --concurrency=20 --run-count=4 --display-mode=Interactive
 ```
@@ -59,7 +61,7 @@ cabal run example -- --concurrency=20 --run-count=4 --display-mode=Interactive
 
 # How to Use `wrecker` to Write Your Own Benchmarks
 
-[The documentation for Client.lhs is also a tutorial. Click here.] (/examples/Client.md)
+[See this literate Haskell file here] (https://github.com/skedgeme/wrecker/blob/example-progress/examples/Client.md)
 
 # examples/Main.lhs Implementation
 ```haskell
@@ -90,17 +92,18 @@ waitFor :: Int -> IO ()
 waitFor port = do
     cxt <- initConnectionContext
     fix $ \next -> do
-        handle (\(e :: IOException) -> threadDelay 100000 >> next) $ do
-            connection <- connectTo cxt
-                        $ ConnectionParams "localhost"
-                                           port
-                                           Nothing
-                                           Nothing
-            connectionClose connection
+        handle (\(e :: IOException) -> threadDelay 100000 >> next)
+               (do
+                  connection <- connectTo cxt
+                              $ ConnectionParams "localhost"
+                                                 (fromIntegral port)
+                                                 Nothing
+                                                 Nothing
+                  connectionClose connection
+               )
 ```
-We start the [server](/examples/Server.hs) and then when it is ready we start the `wrecker` [client](/examples/Client.md)
 
-```
+```haskell 
 main :: IO ()
 main = do
  -- Start the server on it's own thread
@@ -108,6 +111,7 @@ main = do
 
  -- The examples use port 3000 by default
  let port = 3000
+
 
  options <- runParser
  -- wait for the server to be ready
@@ -123,6 +127,6 @@ main = do
  takeMVar end
 ```
 
-<a name="footnote1">1</a>: See Martin Fowler Stackoverflow *highest ranked answer* [http://stackoverflow.com/questions/346372/whats-the-difference-between-faking-mocking-and-stubbing]
+[^1]: See Martin Fowler Stackoverflow *highest ranked answer* [http://stackoverflow.com/questions/346372/whats-the-difference-between-faking-mocking-and-stubbing]
 
-<a name="footnote1">2</a>: Converting to a `fake` is left as an exercise.
+[^2]: Converting to a `fake` is left as an exercise.
