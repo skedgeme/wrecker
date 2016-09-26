@@ -185,5 +185,5 @@ test-suite wrecker-test
                , network
                , immortal
                , next-ref
-  ghc-options:        -O2 -threaded  -pgmL markdown-unlit -rtsopts -with-rtsopts=-N 
+  ghc-options:        -O2 -threaded  -pgmL markdown-unlit -rtsopts
   default-language:    Haskell2010

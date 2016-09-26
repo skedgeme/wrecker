@@ -8,15 +8,14 @@ main = hspec spec
 spec :: Spec 
 spec = describe "Recorder" $ do
   it "add/read event" $ do 
-    False `shouldBe` True
+    pending
   it "stop recorder closes the queue" $ do
-    False `shouldBe` True
+    pending
   it "records success is timed correctly" $ do
-    False `shouldBe` True
+    pending
   it "records status code failure correctly" $ do
-    False `shouldBe` True
-    
+    pending
   it "records totally failure correctly" $ do 
-    False `shouldBe` True
+    pending
   
     

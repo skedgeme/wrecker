@@ -8,8 +8,8 @@ main = hspec spec
 spec :: Spec 
 spec = describe "Runner" $ do
   it "updateSampler correctly adds event" $ do
-    False `shouldBe` True
+    pending
   it "collectEvent collects all events until the recorder stops" $ do 
-    False `shouldBe` True
+    pending
   it "runWith works" $ do 
-    False `shouldBe` True
+    pending

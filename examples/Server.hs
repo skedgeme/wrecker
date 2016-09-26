@@ -42,7 +42,6 @@ import System.Random.MWC.Distributions
 import System.Random.MWC
 import qualified Data.Text as T
 import Data.Monoid
-import Distribution
 import Wrecker
 import Control.Exception
 import Control.Concurrent.NextRef (NextRef)
@@ -63,9 +62,6 @@ rootRef port = T.pack $ "http://localhost:" ++ show port
 jsonE :: ToJSON a => a -> ActionM ()
 jsonE = json . Envelope
 
-sleepDist :: GenIO -> Distribution -> ActionM ()
-sleepDist gen dist = liftIO $ threadDelay . floor . (*1e6) =<< sample gen dist
-
 data Root a = Root
   { root            :: a
   , products        :: a
@@ -76,7 +72,7 @@ data Root a = Root
   , checkout        :: a
   } deriving (Show, Eq, Functor)
 
-type RootDistribution = Root Distribution
+type RootInt = Root Int
 
 instance Applicative Root where
  pure x = Root
@@ -100,14 +96,11 @@ instance Applicative Root where
 
            }  
 
-zeroDistribution :: RootDistribution
-zeroDistribution = pure $ Constant 0
-
-app :: GenIO -> RootDistribution -> Port -> ScottyM ()
-app gen Root {..} port = do
+app :: RootInt -> Port -> ScottyM ()
+app Root {..} port = do
   let host = rootRef port
   Scotty.get "/root" $ do
-    sleepDist gen root
+    liftIO $ threadDelay root
     jsonE [aesonQQ|
            { "products" : #{host <> "/products" }
            , "carts"    : #{host <> "/carts"    }
@@ -118,14 +111,14 @@ app gen Root {..} port = do
           |]
 
   Scotty.get "/products" $ do
-    sleepDist gen products
+    liftIO $ threadDelay products
     jsonE [aesonQQ|
              [ #{host <> "/products/0"}
              ]
            |]
 
   Scotty.get "/product/:id" $ do
-    sleepDist gen products
+    liftIO $ threadDelay products
     jsonE [aesonQQ|
           { "summary" : "shirt" }
           |]
@@ -138,14 +131,14 @@ app gen Root {..} port = do
           |]
 
   Scotty.get "/carts/:id" $ do
-    sleepDist gen cartsIndex
+    liftIO $ threadDelay cartsIndex
     jsonE [aesonQQ|
           { "items" : #{host <> "/carts/0/items"}
           }
           |]
 
   Scotty.post "/carts/:id/items" $ do
-    sleepDist gen cartsIndexItems
+    liftIO $ threadDelay cartsIndexItems
     jsonE [aesonQQ|
           #{host <> "/carts/0/items"}
           |]
@@ -158,7 +151,7 @@ app gen Root {..} port = do
           |]
 
   Scotty.get "/users/:id" $ do
-    sleepDist gen usersIndex
+    liftIO $ threadDelay usersIndex
     jsonE [aesonQQ|
           { "cart"     : #{host <> "/carts/0"}
           , "username" : "example"
@@ -166,16 +159,16 @@ app gen Root {..} port = do
           |]
 
   Scotty.post "/login" $ do
-    sleepDist gen login
+    liftIO $ threadDelay login
     jsonE [aesonQQ|
           #{host <> "/users/0"}
           |]
 
   Scotty.post "/checkout" $ do
-    sleepDist gen checkout
+    liftIO $ threadDelay checkout
     jsonE ()
 
-run :: RootDistribution -> IO (Port, Immortal.Thread, ThreadId, NextRef AllStats)
+run :: RootInt -> IO (Port, Immortal.Thread, ThreadId, NextRef AllStats)
 run = start Nothing
 
 stop :: (Port, ThreadId, NextRef AllStats) -> IO AllStats
@@ -202,18 +195,16 @@ getASocket = \case
   Just port -> undefined
   Nothing   -> openFreePort
   
-start :: Maybe Port -> RootDistribution -> IO ( Port
-                                              , Immortal.Thread
-                                              , ThreadId
-                                              , NextRef AllStats
-                                              )
+start :: Maybe Port -> RootInt -> IO ( Port
+                                     , Immortal.Thread
+                                     , ThreadId
+                                     , NextRef AllStats
+                                     )
 start mport dist = do
   (port, socket) <- getASocket mport
-  gen <- createSystemRandom
   
   (ref, recorderThread, recorder) <- newStandaloneRecorder
-  scottyApp <- Scotty.scottyApp $ app gen dist port
-  gen       <- createSystemRandom
+  scottyApp <- Scotty.scottyApp $ app dist port
   threadId <- forkIO $ Warp.runSettingsSocket defaultSettings socket 
                      $ recordMiddleware recorder
                      $ scottyApp
@@ -222,7 +213,7 @@ start mport dist = do
 
 main :: IO ()
 main = mdo 
-  (_, recorderThread, _,ref) <- start (Just 3000) zeroDistribution 
+  (_, recorderThread, _,ref) <- start (Just 3000) (pure 0) 
                   `onException` ( do Immortal.stop recorderThread
                                      allStats <- NextRef.readLast ref
                                      putStrLn $ Wrecker.pprStats Nothing allStats

@@ -1,5 +1,5 @@
 {-# LANGUAGE QuasiQuotes, LambdaCase, RecordWildCards #-}
-module WreckerSpec where
+module ExampleSpec where
 import Wrecker
 import qualified Wrecker.Statistics as Stats
 import Test.Hspec
@@ -8,8 +8,6 @@ import qualified Client as Client
 import Network.Wreq
 import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as H
-import Distribution (Distribution)
-import qualified Distribution as Distribution
 import Control.Concurrent
 import Network.Wai.Handler.Warp (Port)
 import Data.Maybe (fromJust)
@@ -20,10 +18,44 @@ import qualified Data.Vector.Unboxed as U
 import Control.Concurrent.NextRef (NextRef)
 import qualified Control.Concurrent.NextRef as NextRef
 
+{-
+  This file tests how well `wrecker` can detect a "signal". 
+  Essentially we increase the time of server and see how close `wrecker`
+  gets to detecting the increase. 
+
+  The precision of `threadDelay` is not great at least for small values. So we 
+  record the actual times on the server and compare against the measured values.
+
+  The model we use
+
+       client observed time(delay) = travel time + server overhead + request time(delay)
+  
+  We call `travel time + server overhead` `overhead` and compute it by measuring
+
+       overhead = client observed time(1 microsecond) - request time(1 microsecond)
+
+  We assume that `overhead` is the same regardless of the delays injected to 
+  slow down `request time`. (this appears false unfortunately and affects the accuracy).
+
+  Then we compare
+
+      client observed time(10 milliseconds) - overhead ~ recorded from the server(10 millisecond delay)
+
+  Telling the server to sleep 10 milliseconds actually slows it down around 12. 
+
+  `wrecker` is consistantly overestimating the times. I don't know if this an issue with wrecker or 
+  something about the interplay between delaying the request and the travel time or the server overhead.
+
+
+  There are many issues with this "test". The interations should be based on some statistically stopping conditioning. 
+  Additionally the approx equality should really be something like a .
+
+  The gc is an issue for getting good data. Running with -I0 helps, -qg might?
+-}
+
 sleepAmount :: Int  -- microseconds
 sleepAmount = 10000 -- 10 milliseconds
-              -- 0
-              -- 1 millisecond 
+
               
 data Gaussian = Gaussian 
                 { mean     :: Double
@@ -34,9 +66,6 @@ subtractGaussian :: Gaussian -> Gaussian -> Gaussian
 subtractGaussian x y 
   = Gaussian (mean     x - mean     y) 
              (variance x - variance y)
-
-gaussianToDistribution :: Gaussian -> Distribution
-gaussianToDistribution Gaussian {..} = Distribution.Gaussian {..}
 
 urlStatsToDist :: HashMap String ResultStatistics 
                -> Server.Root Gaussian
@@ -66,8 +95,8 @@ substractDist x y = Server.Root
   }
 
 -- Create a distribution for sleeping
-rootDistribution :: Server.Root Gaussian
-rootDistribution = pure $ Gaussian (fromIntegral sleepAmount / 1e6 ) 0
+rootDistribution :: Server.RootInt
+rootDistribution = pure sleepAmount
 
 main :: IO ()
 main = hspec spec
@@ -82,7 +111,7 @@ class Approx a where
   approx :: a -> a -> Bool
 
 instance Approx Double where
-  approx x y = abs (x - y) < 0.001
+  approx x y = abs (x - y) < 0.002
 
 instance Approx Gaussian where
   approx x y = approx (mean     x) (mean     y)
@@ -104,55 +133,37 @@ runWrecker port
    in fromJust 
    .  H.lookup key 
   <$> Wrecker.run (defaultOptions 
-                    { runStyle    = RunCount 1000
+                    { runStyle    = RunCount 100
                     , displayMode = Interactive
                     }
                   )
                   [ (key, Client.testScript port)
                   ]
 
-timeThreadDelay :: Int -> Int -> IO (Double, Double)
-timeThreadDelay sleepTime count 
-   = fmap (S.meanVariance . U.fromList)
-   $ replicateM count 
-   $ fmap snd
-   $ elapsedTime 
-   $ threadDelay sleepTime
-
-calculateOverhead :: IO (Server.Root Gaussian, Server.Root Gaussian, Gaussian)
+calculateOverhead :: IO (Server.Root Gaussian)
 calculateOverhead = do 
-  
-  putStrLn "computing threadDelay dist"
-  (threadSleepMean, threadSleepVariance) <- timeThreadDelay sleepAmount 10
-  putStrLn $ "threadSleepMean = "     ++ show threadSleepMean
-  putStrLn $ "threadSleepVariance = " ++ show threadSleepVariance 
-  
-  (port, _, threadId, ref) <- Server.run Server.zeroDistribution
+  (port, _, threadId, ref) <- Server.run $ pure 1
   
   allStats    <- runWrecker port
+  
+  -- This how long a 'null' request takes
   serverStats <- NextRef.readLast ref
-  
   putStrLn $ Stats.pprStats Nothing serverStats
-  
   killThread threadId
   
-  return ( urlStatsToDist $ aPerUrl allStats
-         , urlStatsToDist $ aPerUrl serverStats
-         , Gaussian threadSleepMean threadSleepVariance
-         )
+  return $ substractDist (urlStatsToDist $ aPerUrl allStats   ) 
+                         (urlStatsToDist $ aPerUrl serverStats)
+         
   
-start :: IO (Port, ThreadId, Server.Root Gaussian, Gaussian, NextRef AllStats)
+start :: IO (Port, ThreadId, Server.Root Gaussian, NextRef AllStats)
 start = do
-  (overhead, serverTimes, expected) <- calculateOverhead
-  (port, _, threadId, ref) <- Server.run (fmap gaussianToDistribution rootDistribution)
+  overhead <- calculateOverhead
+  (port, _, threadId, ref) <- Server.run rootDistribution
+    
+  return (port, threadId, overhead, ref)
   
-  putStrLn $ "serverTimes" ++ show serverTimes
-  putStrLn $ "overhead"    ++ show overhead  
-  
-  return (port, threadId, substractDist overhead serverTimes, expected, ref)
-  
-stop :: (Port, ThreadId, Server.Root Gaussian, Gaussian, NextRef AllStats) -> IO ()
-stop (_, threadId, _, _, _) = killThread threadId
+stop :: (Port, ThreadId, Server.Root Gaussian, NextRef AllStats) -> IO ()
+stop (_, threadId, _, _) = killThread threadId
 
 shouldBeApprox :: (Show a, Approx a) => a -> a -> IO ()
 shouldBeApprox x y = shouldSatisfy (x, y) (uncurry approx)
@@ -161,23 +172,12 @@ spec :: Spec
 spec = beforeAll start
      $ afterAll  stop
      $ describe "Wrecker"
-     $ it "measure requests somewhat accurately" $ \(port, _, overhead, predictedDist, ref) -> do
-         threadDelay 500000
+     $ it "measure requests somewhat accurately" $ \(port, _, overhead, ref) -> do
          let key = "key"
          allStats <- urlStatsToDist . aPerUrl <$> runWrecker port
-         putStrLn $ "allStats" ++ show allStats
-         
-         putStrLn $ "overhead" ++ show overhead
-         
-         putStrLn $ "predictedDist" ++ show predictedDist
-         
+
          expectedDist <- urlStatsToDist . aPerUrl <$> NextRef.readLast ref
-
-         putStrLn $ "expectedDist" ++ show expectedDist
-
          
          let adjustedDist = substractDist allStats overhead
-         putStrLn $ "adjustedDist" ++ show adjustedDist
-         putStrLn "\n\n"
-         putStrLn $ "error" ++ show (substractDist expectedDist adjustedDist)
+
          adjustedDist `shouldBeApprox` expectedDist
