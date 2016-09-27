@@ -26,7 +26,7 @@ testScript port recorder = do
   rpc "checkout" checkout cart
 ```
 
-For this example `stub`<sup>1</sup> <sup>2</sup> server.
+For this example `stub` server.
 
 ```json
 { "products"        : ["http://localhost:3000/products/0"]
