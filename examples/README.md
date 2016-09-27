@@ -1,8 +1,6 @@
 ### `wrecker`
 `wrecker` is a HTTP benchmarking library for profiling several API actions.
 
-`wrecker`'s API types are type alias, so clients can conform to the interface without depending on the `wrecker` package.
-
 ### Example
 
 Here is an example client script.
@@ -103,7 +101,7 @@ waitFor port = do
                )
 ```
 
-```haskell 
+```haskell
 main :: IO ()
 main = do
  -- Start the server on it's own thread
