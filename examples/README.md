@@ -1,4 +1,38 @@
+## Running the Examples
 
+- To run whole benchmark example `cabal run example`
+- Just the client `cabal run example-client `
+- Just the server `cabal run example-server`
+
+Additionally the examples take the standard `wrecker` command line arguments, which can be viewed with
+
+     cabal run example -- --help
+
+```
+wrecker - HTTP stress tester and benchmarker
+
+Usage: example [--concurrency ARG] [--bin-count ARG] ([--run-count ARG] |
+               [--run-timed ARG]) [--timeout-time ARG] [--display-mode ARG]
+               [--log-level ARG] [--match ARG] [--request-name-size ARG]
+               [--output-path ARG] [--silent]
+  Welcome to wrecker
+
+Available options:
+  -h,--help                Show this help text
+  --concurrency ARG        Number of threads for concurrent requests
+  --bin-count ARG          Number of bins for latency histogram
+  --run-count ARG          number of times to repeat
+  --run-timed ARG          number of seconds to repeat
+  --timeout-time ARG       How long to wait for all requests to finish
+  --display-mode ARG       Display results interactively
+  --log-level ARG          Log to stderr events of criticality greater than the LOG_LEVEL
+  --match ARG              Only run tests that match the glob
+  --request-name-size ARG  Request name size for the terminal display
+  --output-path ARG        Save a JSON file of the the statistics to given path
+  --silent                 Disable all output
+```
+
+Below is the source for `example` which creates a client and server.
 
 ```haskell
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -18,7 +52,6 @@ import Network.Connection ( connectTo
                           , ConnectionParams (..)
                           , initConnectionContext
                           )
-import Control.Monad (void)
 ```
 
 A little utility function which loops until a port is ready for connections.
@@ -28,7 +61,7 @@ waitFor :: Int -> IO ()
 waitFor port = do
     cxt <- initConnectionContext
     fix $ \next -> do
-        handle (\(e :: IOException) -> threadDelay 100000 >> next)
+        handle (\(_ :: IOException) -> threadDelay 100000 >> next)
                (do
                   connection <- connectTo cxt
                               $ ConnectionParams "localhost"
@@ -39,6 +72,8 @@ waitFor port = do
                )
 ```
 
+Entry point
+
 ```haskell
 main :: IO ()
 main = do
@@ -48,14 +83,13 @@ main = do
  -- The examples use port 3000 by default
  let port = 3000
 
-
  options <- runParser
  -- wait for the server to be ready
  waitFor port
 
  -- Start the client and close an MVar to signal when the thread has finished
  end <- newEmptyMVar
- result <- forkIO $ do
+ forkIO $ do
      run options $ Client.benchmarks port
      putMVar end ()
 

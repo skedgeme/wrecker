@@ -8,10 +8,10 @@ import Data.Monoid
 
 data RunType = RunCount Int | RunTimed Int
   deriving (Show, Eq)
-  
-data DisplayMode = Interactive | NonInteractive 
+
+data DisplayMode = Interactive | NonInteractive
   deriving (Show, Eq, Read)
-  
+
 data Options = Options
   { concurrency           :: Int
   -- ^ The number of simulatanous connections
@@ -21,13 +21,13 @@ data Options = Options
   -- ^ runStyle determines if the 'wrecker' runs for a specified
   --   time period or for a specified number of runs.
   , timeoutTime           :: Int
-  -- ^ How long to wait after the first benchmark for the other threads 
+  -- ^ How long to wait after the first benchmark for the other threads
   --   to finish
   , displayMode           :: DisplayMode
   -- ^ This controls the command line display. It can be either Interactive
   --   of NonInteractive
   , logLevel              :: LogLevel
-  -- ^ 
+  -- ^
   , match                 :: String
   -- ^ Set this to filter the benchmarks using a pattern
   , requestNameColumnSize :: Maybe Int
@@ -38,10 +38,10 @@ data Options = Options
   -- ^ Set 'silent' to true to disable all output.
   } deriving (Show, Eq)
 
--- | 'defaultOptions' provides sensible default for the 'Options' 
+-- | 'defaultOptions' provides sensible default for the 'Options'
 --   types
 defaultOptions :: Options
-defaultOptions = Options 
+defaultOptions = Options
   { concurrency           = 1
   , binCount              = 20
   , runStyle              = RunCount 1
@@ -52,9 +52,9 @@ defaultOptions = Options
   , requestNameColumnSize = Nothing
   , outputFilePath        = Nothing
   , silent                = False
-  } 
+  }
 
-data PartialOptions = PartialOptions 
+data PartialOptions = PartialOptions
   { mConcurrency           :: Maybe Int
   , mBinCount              :: Maybe Int
   , mRunStyle              :: Maybe RunType
@@ -66,10 +66,10 @@ data PartialOptions = PartialOptions
   , mOutputFilePath        :: Maybe FilePath
   , mSilent                :: Maybe Bool
   } deriving (Show, Eq)
-  
+
 instance Monoid PartialOptions where
-  mempty = PartialOptions 
-            { mConcurrency           = Just $ concurrency           defaultOptions 
+  mempty = PartialOptions
+            { mConcurrency           = Just $ concurrency           defaultOptions
             , mBinCount              = Just $ binCount              defaultOptions
             , mRunStyle              = Just $ runStyle              defaultOptions
             , mTimeoutTime           = Just $ timeoutTime           defaultOptions
@@ -80,7 +80,7 @@ instance Monoid PartialOptions where
             , mOutputFilePath        = outputFilePath               defaultOptions
             , mSilent                = Just $ silent                defaultOptions
             }
-  mappend x y = PartialOptions 
+  mappend x y = PartialOptions
                   { mConcurrency           =  mConcurrency x <|> mConcurrency y
                   , mBinCount              =  mBinCount    x <|> mBinCount    y
                   , mRunStyle              =  mRunStyle    x <|> mRunStyle    y
@@ -88,17 +88,17 @@ instance Monoid PartialOptions where
                   , mDisplayMode           =  mDisplayMode x <|> mDisplayMode y
                   , mLogLevel              =  mLogLevel    x <|> mLogLevel    y
                   , mMatch                 =  mMatch       x <|> mMatch       y
-                  , mRequestNameColumnSize =  mRequestNameColumnSize x 
+                  , mRequestNameColumnSize =  mRequestNameColumnSize x
                                           <|> mRequestNameColumnSize y
-                  , mOutputFilePath        =  mOutputFilePath x 
+                  , mOutputFilePath        =  mOutputFilePath x
                                           <|> mOutputFilePath y
                   , mSilent                =  mSilent      x <|> mSilent      y
                   }
 
 completeOptions :: PartialOptions -> Maybe Options
-completeOptions options = 
+completeOptions options =
   case options <> mempty of
-    PartialOptions 
+    PartialOptions
       { mConcurrency           = Just concurrency
       , mBinCount              = Just binCount
       , mRunStyle              = Just runStyle
@@ -110,8 +110,8 @@ completeOptions options =
       , mOutputFilePath        = outputFilePath
       , mSilent                = Just silent
       } -> Just $ Options {..}
-    _ -> Nothing 
-  
+    _ -> Nothing
+
 optionalOption :: Read a => Mod OptionFields a -> Parser (Maybe a)
 optionalOption = optional . option auto
 
@@ -121,18 +121,18 @@ optionalStrOption = optional . strOption
 optionalSwitch :: Mod FlagFields Bool -> Parser (Maybe Bool)
 optionalSwitch = optional . switch
 
-pPartialOptions :: Parser PartialOptions 
+pPartialOptions :: Parser PartialOptions
 pPartialOptions
    =  PartialOptions
-  <$> optionalOption 
+  <$> optionalOption
       (  long "concurrency"
       <> help "Number of threads for concurrent requests"
       )
-  <*> optionalOption 
+  <*> optionalOption
       (  long "bin-count"
       <> help "Number of bins for latency histogram"
       )
-  <*> optional 
+  <*> optional
       (  RunCount <$> option auto
                    (  long "run-count"
                   <>  help "number of times to repeat "
@@ -146,41 +146,40 @@ pPartialOptions
       (  long "timeout-time"
       <> help "How long to wait for all requests to finish"
       )
-  <*> optionalOption 
+  <*> optionalOption
       (  long "display-mode"
       <> help "Display results interactively"
       )
-  <*> optionalOption 
+  <*> optionalOption
       (  long "log-level"
-      <> help "Display results interactively"
+      <> help "Log to stderr events of criticality greater than the LOG_LEVEL"
       )
   <*> optionalStrOption
       (  long "match"
       <> help "Only run tests that match the glob"
       )
-  <*> optionalOption 
+  <*> optionalOption
       (  long "request-name-size"
       <> help "Request name size for the terminal display"
       )
-  <*> optionalStrOption 
+  <*> optionalStrOption
       (  long "output-path"
       <> help "Save a JSON file of the the statistics to given path"
       )
-  <*> optionalSwitch 
+  <*> optionalSwitch
       (  long "silent"
       <> help "Disable all output"
       )
 
 runParser :: IO Options
-runParser = do 
+runParser = do
   let opts = info (helper <*> pPartialOptions)
                ( fullDesc
                <> progDesc "Welcome to wrecker"
-               <> header "wrecker - HTTP stress tester and benchmarker" 
+               <> header "wrecker - HTTP stress tester and benchmarker"
                )
-  
-  partialOptions <- execParser opts 
+
+  partialOptions <- execParser opts
   case completeOptions partialOptions of
     Nothing -> throwIO $ userError ""
     Just x  -> return x
-  

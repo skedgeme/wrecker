@@ -1,69 +1,39 @@
-### `wrecker`
-`wrecker` is a HTTP benchmarking library for profiling several API actions.
+## Running the Examples
 
-`wrecker`'s API types are type alias, so clients can conform to the interface without depending on the `wrecker` package.
+- To run whole benchmark example `cabal run example`
+- Just the client `cabal run example-client `
+- Just the server `cabal run example-server`
 
-### Example
+Additionally the examples take the standard `wrecker` command line arguments, which can be viewed with
 
-Here is an example client script.
+     cabal run example -- --help
 
 ```
-testScript :: Int -> Recorder -> IO ()
-testScript port recorder = do
-  Root { products
-       , login
-       , checkout
-       }             <- get recorder "root"     (rootRef port)
-  firstProduct : _   <- get recorder "products" products
-  userRef            <- rpc recorder "login"    login
-                                                ( Credentials
-                                                  { userName = "a@example.com"
-                                                  , password = "password"
-                                                  }
-                                                )
-  User { usersCart } <- get recorder "user"     userRef
-  Cart { items }     <- get recorder "cart"     usersCart
+wrecker - HTTP stress tester and benchmarker
 
-  insert "items" items firstProduct
-  rpc "checkout" checkout cart
+Usage: example [--concurrency ARG] [--bin-count ARG] ([--run-count ARG] |
+               [--run-timed ARG]) [--timeout-time ARG] [--display-mode ARG]
+               [--log-level ARG] [--match ARG] [--request-name-size ARG]
+               [--output-path ARG] [--silent]
+  Welcome to wrecker
+
+Available options:
+  -h,--help                Show this help text
+  --concurrency ARG        Number of threads for concurrent requests
+  --bin-count ARG          Number of bins for latency histogram
+  --run-count ARG          number of times to repeat
+  --run-timed ARG          number of seconds to repeat
+  --timeout-time ARG       How long to wait for all requests to finish
+  --display-mode ARG       Display results interactively
+  --log-level ARG          Log to stderr events of criticality greater than the LOG_LEVEL
+  --match ARG              Only run tests that match the glob
+  --request-name-size ARG  Request name size for the terminal display
+  --output-path ARG        Save a JSON file of the the statistics to given path
+  --silent                 Disable all output
 ```
 
-For this example `stub`<sup>1</sup> <sup>2</sup> server.
+Below is the source for `example` which creates a client and server.
 
-```json
-{ "products"        : ["http://localhost:3000/products/0"]
-, "product/:id"     : { "summary" : "shirt" }
-, "carts"           : ["http://localhost:3000/carts/0"]
-, "carts/:id"       : { "items" : "http://localhost:3000/carts/0/items" }
-, "carts/:id/items" : []
-, "users"           : ["http://localhost:3000/users/0"]
-, "users/:id"       : { "cart"     : "http://localhost:3000/carts/0"
-                    , "username" : "example"
-                    }
-}
-```
-
-### Output
-
-Output from running
-
-```bash
-cabal run example -- --concurrency=20 --run-count=4 --display-mode=Interactive
-```
-
-![Example terminal output](/examples/example.gif?raw=true "Example Terminal Output")
-
-
-### Running Examples
- - To run whole benchmark example `cabal run example`
- - Just the client `cabal run example-client `
- - Just the server `cabal run example-server`
-
-# How to Use `wrecker` to Write Your Own Benchmarks
-
-[See this literate Haskell file here] (https://github.com/skedgeme/wrecker/blob/example-progress/examples/Client.md)
-
-# examples/Main.lhs Implementation
 ```haskell
 {-# LANGUAGE ScopedTypeVariables #-}
 import qualified Client as Client
@@ -82,7 +52,6 @@ import Network.Connection ( connectTo
                           , ConnectionParams (..)
                           , initConnectionContext
                           )
-import Control.Monad (void)
 ```
 
 A little utility function which loops until a port is ready for connections.
@@ -92,7 +61,7 @@ waitFor :: Int -> IO ()
 waitFor port = do
     cxt <- initConnectionContext
     fix $ \next -> do
-        handle (\(e :: IOException) -> threadDelay 100000 >> next)
+        handle (\(_ :: IOException) -> threadDelay 100000 >> next)
                (do
                   connection <- connectTo cxt
                               $ ConnectionParams "localhost"
@@ -103,7 +72,9 @@ waitFor port = do
                )
 ```
 
-```haskell 
+Entry point
+
+```haskell
 main :: IO ()
 main = do
  -- Start the server on it's own thread
@@ -112,21 +83,16 @@ main = do
  -- The examples use port 3000 by default
  let port = 3000
 
-
  options <- runParser
  -- wait for the server to be ready
  waitFor port
 
  -- Start the client and close an MVar to signal when the thread has finished
  end <- newEmptyMVar
- result <- forkIO $ do
+ forkIO $ do
      run options $ Client.benchmarks port
      putMVar end ()
 
  -- Wait for the client thread to finish and then return
  takeMVar end
 ```
-
-[^1]: See Martin Fowler Stackoverflow *highest ranked answer* [http://stackoverflow.com/questions/346372/whats-the-difference-between-faking-mocking-and-stubbing]
-
-[^2]: Converting to a `fake` is left as an exercise.
