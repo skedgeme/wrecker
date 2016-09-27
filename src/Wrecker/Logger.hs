@@ -11,31 +11,40 @@ import Data.Function
 data LogLevel = LevelDebug | LevelInfo | LevelWarn | LevelError
   deriving (Show, Eq, Ord, Read)
 
-data Logger = Logger 
+data Logger = Logger
   { thread       :: ThreadId
   , inChan       :: U.InChan (Maybe String)
   , wait         :: IO ()
   , currentLevel :: LogLevel
   }
 
-
-
-newLogger :: Handle -> Int -> LogLevel -> IO Logger
-newLogger handle maxSize currentLevel = do 
+{- | Create a 'Logger' with the given 'Handle' and max buffer size.
+     The logger will drop messages if it is unable to keep up and it's message buffer
+     goes over the max size.
+-}
+newLogger :: Handle
+          -- ^ The 'Handle' to log to.
+          -> Int
+          -- ^ Max buffer size
+          -> LogLevel
+          -- ^ Minimum log level to log.
+          -> IO Logger
+newLogger handle maxSize currentLevel = do
   (inChan, outChan) <- U.newChan maxSize
-  lock   <- newEmptyMVar 
+  lock   <- newEmptyMVar
   thread <- readLoop handle outChan lock
-  
+
   let wait = takeMVar lock
-  
+
   return Logger {..}
 
+-- | Create a logger using stderr. This is the typical way a logger is created.
 newStdErrLogger :: Int -> LogLevel -> IO Logger
 newStdErrLogger = newLogger stderr
 
 readLoop :: Handle -> U.OutChan (Maybe String) -> MVar () -> IO ThreadId
-readLoop handle chan lock = forkIO $ do 
-  fix $ \next -> do 
+readLoop handle chan lock = forkIO $ do
+  fix $ \next -> do
     -- Block on the next elemen
     -- If it "Just" print it and loop
     -- Otherwise we are not with the loop
@@ -48,17 +57,17 @@ readLoop handle chan lock = forkIO $ do
 
 -- True if the write was successful or False otherwise
 writeLogger :: Logger -> LogLevel -> String -> IO Bool
-writeLogger Logger {..} messageLevel msg = 
+writeLogger Logger {..} messageLevel msg =
   if (currentLevel <= messageLevel) then
     U.tryWriteChan inChan $ Just msg
   else
     return False
-  
-  
+
+
 shutdownLogger :: Int -> Logger -> IO ()
-shutdownLogger waitTime logger@(Logger {..}) = do 
+shutdownLogger waitTime logger@(Logger {..}) = do
   U.writeChan inChan Nothing
-  mtimedOut <- timeout waitTime wait 
+  mtimedOut <- timeout waitTime wait
   case mtimedOut of
     Nothing -> forceShutdownLogger logger
     Just () -> return ()
@@ -77,4 +86,3 @@ logWarn logger = writeLogger logger LevelWarn
 
 logError :: Logger -> String -> IO Bool
 logError logger = writeLogger logger LevelError
-

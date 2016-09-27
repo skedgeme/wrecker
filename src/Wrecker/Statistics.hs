@@ -2,14 +2,13 @@
 module Wrecker.Statistics where
 import qualified Data.HashMap.Strict as H
 import Data.HashMap.Strict (HashMap)
-import Wrecker.Recorder 
+import Wrecker.Recorder
 import Wrecker.Options
 import qualified Text.Tabular.AsciiArt as AsciiArt
 import Text.Tabular
 import Text.Printf
 import System.Console.Ansigraph.Core
 import qualified Data.Text as T
--- import Data.Monoid
 import qualified Data.Vector.Unboxed as U
 import Data.Aeson (object, ToJSON (..), (.=), Value (..))
 import Data.List (sortBy)
@@ -17,12 +16,12 @@ import Data.Function
 
 data Histogram = Histogram
   deriving (Show, Eq, Ord)
-  
+
 data VarianceAndMean = VarianceAndMean
-  { var         :: {-# UNPACK #-} !Double  
-  , varMeanDiff :: {-# UNPACK #-} !Double 
+  { var         :: {-# UNPACK #-} !Double
+  , varMeanDiff :: {-# UNPACK #-} !Double
   , varMean     :: {-# UNPACK #-} !Double
-  , varCount    :: {-# UNPACK #-} !Double 
+  , varCount    :: {-# UNPACK #-} !Double
   } deriving (Show, Eq, Ord)
 
 emptyVarianceAndMean :: VarianceAndMean
@@ -34,7 +33,7 @@ emptyVarianceAndMean = VarianceAndMean
   }
 
 stableVarianceStep :: VarianceAndMean -> Double -> VarianceAndMean
-stableVarianceStep VarianceAndMean {..} !newValue = 
+stableVarianceStep VarianceAndMean {..} !newValue =
   let !newCount     = varCount + 1
       !newMean      = varMean + ((newValue - varMean) / newCount)
       !newMeanDiff  = varMeanDiff + ((newValue - varMean)*(newValue - newMean))
@@ -43,17 +42,27 @@ stableVarianceStep VarianceAndMean {..} !newValue =
 insertHist :: Histogram -> Double -> Histogram
 insertHist h _ = h
 
-data Statistics = Statistics 
+-- | These are the
+data Statistics = Statistics
   { sVarMean   :: !VarianceAndMean
+  -- ^ Combined variance and mean. This type contains information useful for
+  --   incremental computation of the variance and mean. To get the individual
+  --   components use 'variance' and 'mean'.
   , sMax       :: !Double
+  -- ^ The maximum time
   , sMin       :: !Double
+  -- ^ The maximum time
   , sHistogram :: !Histogram
+  -- ^ A histogram of times
   , sTotal     :: !Double
+  -- ^ The total time
   } deriving (Show, Eq, Ord)
 
+-- | Extract the mean
 mean :: Statistics -> Double
 mean = varMean . sVarMean
 
+-- | Extract the variance
 variance :: Statistics -> Double
 variance = var . sVarMean
 
@@ -70,23 +79,27 @@ emptyStatistics = Statistics
   }
 
 stepStatistics :: Statistics -> Double -> Statistics
-stepStatistics stats value = stats 
+stepStatistics stats value = stats
      { sVarMean   = stableVarianceStep (sVarMean stats) value
      , sMax       = max (sMax stats) value
      , sMin       = min (sMin stats) value
-     , sHistogram = insertHist (sHistogram stats) value 
+     , sHistogram = insertHist (sHistogram stats) value
      , sTotal     = sTotal stats + value
      }
 
-data ResultStatistics = ResultStatistics 
+{- | This type includes statistics for all of the result values we can detect.
+     This type is used by AllStats to compute per key (URL) statistics among
+     other uses.
+-}
+data ResultStatistics = ResultStatistics
   { rs2xx    :: !Statistics
   , rs4xx    :: !Statistics
   , rs5xx    :: !Statistics
   , rsFailed :: !Statistics
-  , rsRollup :: !Statistics 
+  , rsRollup :: !Statistics
   } deriving (Show, Eq, Ord)
-  
-emptyResultStatistics :: ResultStatistics 
+
+emptyResultStatistics :: ResultStatistics
 emptyResultStatistics = ResultStatistics
   { rs2xx    = emptyStatistics
   , rs4xx    = emptyStatistics
@@ -94,26 +107,26 @@ emptyResultStatistics = ResultStatistics
   , rsFailed = emptyStatistics
   , rsRollup = emptyStatistics
   }
- 
+
 stepResultStatistics :: ResultStatistics -> RunResult -> ResultStatistics
 stepResultStatistics stats = \case
-  Success      { .. } -> stats { rs2xx    = stepStatistics (rs2xx    stats) 
-                                                           resultTime 
-                               , rsRollup = stepStatistics (rsRollup stats) 
-                                                           resultTime 
-                               }
-  ErrorStatus  { .. } 
-    | is4xx errorCode -> stats { rs4xx    = stepStatistics (rs4xx    stats) 
-                                                           resultTime 
-                               , rsRollup = stepStatistics (rsRollup stats) 
-                                                           resultTime 
-                               }
-    | otherwise       -> stats { rs5xx    = stepStatistics (rs5xx    stats) 
+  Success      { .. } -> stats { rs2xx    = stepStatistics (rs2xx    stats)
                                                            resultTime
-                               , rsRollup = stepStatistics (rsRollup stats) 
-                                                           resultTime 
+                               , rsRollup = stepStatistics (rsRollup stats)
+                                                           resultTime
                                }
-  Error        { .. } -> stats { rsFailed = stepStatistics (rsFailed stats) 
+  ErrorStatus  { .. }
+    | is4xx errorCode -> stats { rs4xx    = stepStatistics (rs4xx    stats)
+                                                           resultTime
+                               , rsRollup = stepStatistics (rsRollup stats)
+                                                           resultTime
+                               }
+    | otherwise       -> stats { rs5xx    = stepStatistics (rs5xx    stats)
+                                                           resultTime
+                               , rsRollup = stepStatistics (rsRollup stats)
+                                                           resultTime
+                               }
+  Error        { .. } -> stats { rsFailed = stepStatistics (rsFailed stats)
                                                            resultTime
                                , rsRollup = stepStatistics (rsRollup stats)
                                                            resultTime
@@ -134,7 +147,7 @@ countFailed = statsCount . rsFailed
 
 errorRate :: ResultStatistics -> Double
 errorRate x
-  = fromIntegral (count4xx x + count5xx x + countFailed x) 
+  = fromIntegral (count4xx x + count5xx x + countFailed x)
   / fromIntegral (count2xx x + count4xx x + count5xx x + countFailed x)
 
 isEntirelySuccessful :: ResultStatistics -> Bool
@@ -142,12 +155,21 @@ isEntirelySuccessful x = (count4xx x + count5xx x + countFailed x) == 0
 
 successfulToResult :: Statistics -> ResultStatistics
 successfulToResult x = emptyResultStatistics { rs2xx = x }
-    
-data AllStats = AllStats 
+
+{- | AllStats has all of the ... stats. This type stores all of the information
+     'wrecker' uses to display metrics to the user.
+-}
+data AllStats = AllStats
   { aRollup       :: !ResultStatistics
+  -- ^ The "total" stats. This computes things like total 2xx and average time
+  --   Across all requests.
   , aCompleteRuns :: !ResultStatistics
+  -- ^ This contains statistic for actions that completed entirely successfully.
+  --   Useful for knowing if a complex action is under some desired total time.
   , aRuns         :: !(HashMap Int    ResultStatistics)
+  -- ^ This is an intermediate holding spot for scripts that are still executing.
   , aPerUrl       :: !(HashMap String ResultStatistics)
+  -- ^ This is the per key (URL) statistics.
   } deriving (Show, Eq)
 
 emptyAllStats :: AllStats
@@ -159,39 +181,39 @@ emptyAllStats = AllStats
   }
 
 is4xx :: Int -> Bool
-is4xx x = x > 399 && x < 500 
+is4xx x = x > 399 && x < 500
 
 stepAllStats :: AllStats -> Int -> String -> RunResult -> AllStats
-stepAllStats allStats index key result = 
-  case result of 
+stepAllStats allStats index key result =
+  case result of
     End ->  let mRunStats = H.lookup index $ aRuns allStats
             in case mRunStats of
               Nothing -> allStats
-              Just stats 
-                 | errorRate stats == 0 -> 
+              Just stats
+                 | errorRate stats == 0 ->
                     let runTime = sTotal $ rs2xx stats
-                    in allStats { aCompleteRuns = stepResultStatistics 
-                                                    (aCompleteRuns allStats) 
-                                                    (Success runTime "") 
-                                , aRuns         = H.delete index 
+                    in allStats { aCompleteRuns = stepResultStatistics
+                                                    (aCompleteRuns allStats)
+                                                    (Success runTime "")
+                                , aRuns         = H.delete index
                                                 $ aRuns allStats
                                 }
-                 | otherwise -> allStats { aRuns = H.delete index   
+                 | otherwise -> allStats { aRuns = H.delete index
                                                  $ aRuns allStats
                                          }
-    _   -> allStats 
+    _   -> allStats
             { aRollup = stepResultStatistics (aRollup allStats) result
-            , aRuns   = H.insertWith (\_ x -> stepResultStatistics x result) 
-                                     index 
-                                     (stepResultStatistics 
-                                       emptyResultStatistics 
+            , aRuns   = H.insertWith (\_ x -> stepResultStatistics x result)
+                                     index
+                                     (stepResultStatistics
+                                       emptyResultStatistics
                                        result
                                      )
-                                     $ aRuns allStats 
-            , aPerUrl = H.insertWith (\_ x -> stepResultStatistics x result) 
-                                     key 
-                                     (stepResultStatistics 
-                                       emptyResultStatistics 
+                                     $ aRuns allStats
+            , aPerUrl = H.insertWith (\_ x -> stepResultStatistics x result)
+                                     key
+                                     (stepResultStatistics
+                                       emptyResultStatistics
                                        result
                                      )
                       $ aPerUrl allStats
@@ -205,7 +227,7 @@ renderHistogram bins = renderPV $ U.toList powers where
   powers = U.map (\x -> fromIntegral x / total) bins
 
 statToRow :: ResultStatistics -> [String]
-statToRow x 
+statToRow x
   = [ printf "%.4f" $ mean     $ rs2xx x
     , printf "%.8f" $ variance $ rs2xx x
     , printf "%.4f" $ sMax     $ rs2xx x
@@ -222,9 +244,9 @@ pprStats :: Maybe Int -> AllStats -> String
 pprStats nameSize stats = AsciiArt.render id id id $ statsTable nameSize stats
 
 statsTable ::  Maybe Int -> AllStats -> Table String String String
-statsTable nameSize AllStats {..} 
+statsTable nameSize AllStats {..}
   = let sortedPerUrl = sortBy (compare `on` fst) $ H.toList aPerUrl
-  in Table (Group SingleLine 
+  in Table (Group SingleLine
           $ map (Header . maybe id take nameSize . fst) sortedPerUrl
           )
           (Group SingleLine [ Header "mean"
@@ -241,17 +263,17 @@ statsTable nameSize AllStats {..}
           )
           (map (statToRow . snd) sortedPerUrl)
   +====+ SemiTable (Group SingleLine [Header "All"]) (statToRow aRollup)
-  +====+ SemiTable (Group SingleLine [Header "Successful Runs"]) 
+  +====+ SemiTable (Group SingleLine [Header "Successful Runs"])
                    (statToRow aCompleteRuns)
-          
+
 printStats :: Options -> AllStats -> IO ()
-printStats options sampler 
+printStats options sampler
   = putStrLn $ pprStats (requestNameColumnSize options) sampler
 ------------------------------------------------------------------------------
 -- JSON Serialization
 ------------------------------------------------------------------------------
 instance ToJSON Statistics where
-  toJSON x = object 
+  toJSON x = object
     [ "mean"     .= mean       x
     , "variance" .= variance   x
     , "max"      .= sMax       x
@@ -261,7 +283,7 @@ instance ToJSON Statistics where
     ]
 
 instance ToJSON ResultStatistics where
-  toJSON ResultStatistics {..} = object 
+  toJSON ResultStatistics {..} = object
     [ "2xx"    .= rs2xx
     , "4xx"    .= rs4xx
     , "5xx"    .= rs5xx
@@ -270,9 +292,9 @@ instance ToJSON ResultStatistics where
     ]
 
 instance ToJSON AllStats where
-  toJSON AllStats {..} = object 
-    [ "per-request" .= Object 
-                     ( H.fromList 
+  toJSON AllStats {..} = object
+    [ "per-request" .= Object
+                     ( H.fromList
                      $ map (\(k, v) -> (T.pack k, toJSON v))
                      $ H.toList aPerUrl
                      )
