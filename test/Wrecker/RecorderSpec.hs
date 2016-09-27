@@ -1,13 +1,13 @@
 module Wrecker.RecorderSpec where
-import Wrecker.Recorder
-import Test.Hspec 
+-- import Wrecker.Recorder
+import Test.Hspec
 
 main :: IO ()
 main = hspec spec
 
-spec :: Spec 
+spec :: Spec
 spec = describe "Recorder" $ do
-  it "add/read event" $ do 
+  it "add/read event" $ do
     pending
   it "stop recorder closes the queue" $ do
     pending
@@ -15,7 +15,5 @@ spec = describe "Recorder" $ do
     pending
   it "records status code failure correctly" $ do
     pending
-  it "records totally failure correctly" $ do 
+  it "records totally failure correctly" $ do
     pending
-  
-    

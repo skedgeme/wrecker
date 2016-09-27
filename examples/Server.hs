@@ -26,29 +26,20 @@ import Data.Aeson.QQ
 import Control.Monad.IO.Class
 import Network.Wai.Handler.Warp
   ( defaultSettings
-  , setPort
   , openFreePort
-  , Port (..)
+  , Port
   )
-import Data.Default
+-- import Data.Default ()
 import GHC.Generics
 import Data.Aeson hiding (json)
 import Data.Text (Text)
-import Data.Reflection
 import qualified Web.Scotty as Scotty
-import Data.Proxy
-import Control.Lens.Lens (ALens')
-import Data.Constraint
-import System.Random.MWC.Distributions
-import System.Random.MWC
 import qualified Data.Text as T
 import Data.Monoid
 import Wrecker
-import Control.Exception
 import Control.Concurrent.NextRef (NextRef)
 import qualified Control.Concurrent.NextRef as NextRef
 import qualified Control.Immortal as Immortal
-import qualified Wrecker.Runner as Wrecker
 import qualified Wrecker.Statistics as Wrecker
 import qualified Network.Wai.Handler.Warp as Warp
 import qualified Network.Wai as Wai
@@ -86,7 +77,7 @@ instance Applicative Root where
           , cartsIndexItems = x
           , checkout        = x
           }
- 
+
  f <*> x = Root
            { root            = root            f $ root                 x
            , products        = products        f $ products             x
@@ -96,7 +87,7 @@ instance Applicative Root where
            , cartsIndexItems = cartsIndexItems f $ cartsIndexItems      x
            , checkout        = checkout        f $ checkout             x
 
-           }  
+           }
 
 app :: RootInt -> Port -> ScottyM ()
 app Root {..} port = do
@@ -187,21 +178,22 @@ toKey x = case Wai.pathInfo x of
   "users" : _               -> "user"
   ["login"]                 -> "login"
   ["checkout"]              -> "checkout"
+  _ -> error "FAIL! UNKNOWN REQUEST FOR EXAMPLE!"
 
 recordMiddleware :: Recorder -> Wai.Application -> Wai.Application
-recordMiddleware recorder app req sendResponse 
-  = record recorder (toKey req) $! app req $ \res -> sendResponse res
-  
+recordMiddleware recorder waiApp req sendResponse
+  = record recorder (toKey req) $! waiApp req $ \res -> sendResponse res
+
 getASocket :: Maybe Port -> IO (Port, Socket)
 getASocket = \case
   Just port -> do s <- N.socket N.AF_INET N.Stream N.defaultProtocol
                   localhost <- N.inet_addr "127.0.0.1"
                   N.bind s (N.SockAddrInet (fromIntegral port) localhost)
                   N.listen s 1
-                  return (port, s)  
-                  
+                  return (port, s)
+
   Nothing   -> openFreePort
-  
+
 start :: Maybe Port -> RootInt -> IO ( Port
                                      , Immortal.Thread
                                      , ThreadId
@@ -209,23 +201,27 @@ start :: Maybe Port -> RootInt -> IO ( Port
                                      )
 start mport dist = do
   (port, socket) <- getASocket mport
-  
+
   (ref, recorderThread, recorder) <- newStandaloneRecorder
   scottyApp <- Scotty.scottyApp $ app dist port
-  threadId <- flip forkFinally (\_ -> N.close socket) 
-            $ Warp.runSettingsSocket defaultSettings socket 
+  threadId <- flip forkFinally (\_ -> N.close socket)
+            $ Warp.runSettingsSocket defaultSettings socket
             $ recordMiddleware recorder
             $ scottyApp
 
   return (port, recorderThread, threadId, ref)
 
 main :: IO ()
-main = mdo 
-  (_, recorderThread, _,ref) <- start (Just 3000) (pure 0) 
-                  `onException` ( do Immortal.stop recorderThread
-                                     allStats <- NextRef.readLast ref
-                                     putStrLn $ Wrecker.pprStats Nothing allStats
-                                )
-  return ()
+main = do
+  (port, socket) <- getASocket $ Just 3000
 
-  
+  (ref, recorderThread, recorder) <- newStandaloneRecorder
+  scottyApp <- Scotty.scottyApp $ app (pure 0) port
+
+  Warp.runSettingsSocket defaultSettings socket
+                                        $ recordMiddleware recorder
+                                        $ scottyApp
+  N.close socket
+  Immortal.stop recorderThread
+  allStats <- NextRef.readLast ref
+  putStrLn $ Wrecker.pprStats Nothing allStats

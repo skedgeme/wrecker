@@ -1,5 +1,5 @@
 name:                wrecker
-version:             0.1.0.1
+version:             0.1.1.0
 synopsis:            A HTTP Performance Benchmarker
 description:
  'wrecker' is a library for creating HTTP benchmarks. It is designed for
@@ -27,7 +27,7 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 library
-  hs-source-dirs:      src
+  hs-source-dirs: src
   exposed-modules: Wrecker
                  , Wrecker.Recorder
                  , Wrecker.Runner
@@ -69,30 +69,18 @@ executable example-server
   main-is:             Server.hs
   build-depends:       base
                      , wrecker
-                     , hspec
-                     , hspec-discover
                      , scotty
                      , aeson-qq
-                     , transformers
                      , warp
-                     , data-default
-                     , wreq
                      , markdown-unlit
                      , aeson
-                     , bytestring
                      , text
-                     , http-client
-                     , reflection
-                     , lens
-                     , constraints
-                     , mwc-random
-                     , statistics
                      , immortal
                      , next-ref
                      , wai
                      , network
-  cpp-options: -D_SERVER_IS_MAIN_ 
-  ghc-options: -threaded -pgmL markdown-unlit -rtsopts -with-rtsopts=-N 
+  cpp-options: -D_SERVER_IS_MAIN_
+  ghc-options: -Wall -Wno-unused-do-bind -Wno-unused-top-binds -threaded -pgmL markdown-unlit -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
 executable example-client
@@ -100,57 +88,36 @@ executable example-client
   main-is:             Client.lhs
   build-depends:       base
                      , wrecker
-                     , hspec
-                     , hspec-discover
-                     , scotty
-                     , aeson-qq
-                     , transformers
-                     , warp
-                     , data-default
                      , wreq
                      , markdown-unlit
                      , aeson
                      , bytestring
                      , text
                      , http-client
-                     , reflection
-                     , lens
-                     , constraints
-                     , mwc-random
-                     , statistics
   cpp-options: -D_CLIENT_IS_MAIN_
-  ghc-options: -threaded -pgmL markdown-unlit -rtsopts -with-rtsopts=-N 
+  ghc-options: -Wall -Wno-unused-top-binds -Wno-unused-do-bind -threaded -pgmL markdown-unlit -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
-  
+
 executable example
   hs-source-dirs:      examples
   main-is:             Main.lhs
   build-depends:       base
                      , wrecker
-                     , hspec
-                     , hspec-discover
                      , scotty
                      , aeson-qq
-                     , transformers
                      , warp
-                     , data-default
                      , wreq
                      , markdown-unlit
                      , aeson
                      , bytestring
                      , text
                      , http-client
-                     , reflection
-                     , lens
-                     , constraints
-                     , mwc-random
-                     , statistics
                      , connection
                      , immortal
                      , next-ref
                      , wai
                      , network
-  ghc-options:         -O2 -threaded -pgmL markdown-unlit  -rtsopts -with-rtsopts=-N 
+  ghc-options: -Wall -Wno-unused-do-bind -O2 -threaded -pgmL markdown-unlit  -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
 test-suite wrecker-test
@@ -163,27 +130,17 @@ test-suite wrecker-test
                , hspec-discover
                , scotty
                , aeson-qq
-               , transformers
                , warp
-               , data-default
                , wreq
                , markdown-unlit
                , aeson
                , bytestring
                , text
                , http-client
-               , reflection
-               , lens
-               , constraints
-               , mwc-random
-               , statistics
-               , connection
                , unordered-containers
-               , clock-extras
-               , vector
                , wai
                , network
                , immortal
                , next-ref
-  ghc-options:        -O2 -threaded  -pgmL markdown-unlit -rtsopts
+  ghc-options: -Wall -Wno-unused-do-bind -O2 -threaded  -pgmL markdown-unlit -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
