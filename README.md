@@ -1,9 +1,17 @@
 ### `wrecker`
 `wrecker` is a HTTP benchmarking library for profiling several API actions.
 
-### Example
+### Output
 
-Here is an example client script.
+Output from running
+
+```bash
+cabal run example -- --concurrency=20 --run-count=4 --display-mode=Interactive
+```
+
+![Example terminal output](/examples/example.gif?raw=true "Example Terminal Output")
+
+### Example Script
 
 ```
 testScript :: Int -> Recorder -> IO ()
@@ -41,22 +49,11 @@ For this example `stub` server.
 }
 ```
 
-### Output
-
-Output from running
-
-```bash
-cabal run example -- --concurrency=20 --run-count=4 --display-mode=Interactive
-```
-
-![Example terminal output](/examples/example.gif?raw=true "Example Terminal Output")
-
-
 ### Running Examples
  - To run whole benchmark example `cabal run example`
  - Just the client `cabal run example-client `
  - Just the server `cabal run example-server`
 
-# How to Use `wrecker` to Write Your Own Benchmarks
+# How to Use `wrecker` for Our Own Benchmarks
 
-[See this literate Haskell file here] (https://github.com/skedgeme/wrecker/blob/example-progress/examples/Client.md)
+[Example client tutorial](/examples/Client.md)
