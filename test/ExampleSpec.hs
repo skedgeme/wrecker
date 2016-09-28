@@ -107,7 +107,7 @@ class Approx a where
   approx :: a -> a -> Bool
 
 instance Approx Double where
-  approx x y = abs (x - y) < 0.002
+  approx x y = abs (x - y) < 0.0005
 
 instance Approx Gaussian where
   approx x y = approx (mean     x) (mean     y)
@@ -129,7 +129,7 @@ runWrecker port
    in fromJust
    .  H.lookup key
   <$> Wrecker.run (defaultOptions
-                    { runStyle    = RunCount 100
+                    { runStyle    = RunCount 250
                     , displayMode = Interactive
                     }
                   )

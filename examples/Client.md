@@ -95,6 +95,8 @@ We need JSON so of course we are using `aeson`.
 
 ```haskell
 import qualified Network.Wreq as Wreq
+import Network.Wreq.Session (Session)
+import qualified Network.Wreq.Session as SWreq
 ```
 `wrecker` does not provide any means for making HTTP calls. It records data,
 computes statistics, controls concurrency and provides a convenient UI.
@@ -156,11 +158,11 @@ The `Envelope` only exists to transmit data between the server and the browser.
 Not only do we want to wrap and unwrap types from our `Envelope`, we also need to wrap api calls with `record`.
 
 ```haskell
-jsonGet :: FromJSON a => Recorder -> String -> Text -> IO a
-jsonGet recorder key url = fromEnvelope $ record recorder key $ Wreq.get (T.unpack url)
+jsonGet :: FromJSON a => Session -> Recorder -> String -> Text -> IO a
+jsonGet sess recorder key url = fromEnvelope $ record recorder key $ SWreq.get sess (T.unpack url)
 
-jsonPost :: (ToJSON a, FromJSON b) => Recorder -> String -> Text -> a -> IO b
-jsonPost recorder key url = liftEnvelope $ record recorder key . Wreq.post (T.unpack url)
+jsonPost :: (ToJSON a, FromJSON b) => Session -> Recorder -> String -> Text -> a -> IO b
+jsonPost sess recorder key url = liftEnvelope $ record recorder key . SWreq.post sess (T.unpack url)
 ```
 
 ## Make a Somewhat Generic REST API
@@ -212,21 +214,21 @@ for our more specific REST and RPC calls.
   like `Cart` or it could be a list like `[Ref a]`.
 
     ```haskell
-    get :: FromJSON a => Recorder -> String -> Ref a -> IO a
-    get recorder key (Ref url) = jsonGet recorder key url
+    get :: FromJSON a => (Session, Recorder) -> String -> Ref a -> IO a
+    get (sess, recorder) key (Ref url) = jsonGet sess recorder key url
     ```
 - `insert` takes a `Ref` to a list and appends an item to it. It returns the
   reference that you passed in because why not.
 
     ```haskell
-    insert :: ToJSON a => Recorder -> String -> Ref [a] -> a -> IO (Ref [a])
-    insert recorder key (Ref url) = jsonPost recorder key url
+    insert :: ToJSON a => (Session, Recorder) -> String -> Ref [a] -> a -> IO (Ref [a])
+    insert (sess, recorder) key (Ref url) = jsonPost sess recorder key url
     ```
 - `rpc` unpacks the URL for the RPC endpoint and `POST`s the input, returning the output.
 
     ```haskell
-    rpc :: (ToJSON a, FromJSON b) => Recorder -> String -> RPC a b -> a -> IO b
-    rpc recorder key (RPC url) = jsonPost recorder key url
+    rpc :: (ToJSON a, FromJSON b) => (Session, Recorder) -> String -> RPC a b -> a -> IO b
+    rpc (sess, recorder) key (RPC url) = jsonPost sess recorder key url
     ```
 
 ## The Example API
@@ -300,7 +302,8 @@ We can now easily write our first script!
 
 ```haskell
 testScript :: Int -> Recorder -> IO ()
-testScript port recorder = do
+testScript port recorder = SWreq.withSession $ \sess -> do
+  let cfg = (sess, recorder)
 ```
 Bootstrap the script and get all the URLs for the endpoints. Unpack
 `products`, `login` and `checkout` for use later down.
@@ -309,16 +312,16 @@ Bootstrap the script and get all the URLs for the endpoints. Unpack
   Root { products
        , login
        , checkout
-       } <- get recorder "root" (rootRef port)
+       } <- get cfg "root" (rootRef port)
 ```
 We get all products and name the first one
 ```haskell
-  firstProduct : _ <- get recorder "products" products
+  firstProduct : _ <- get cfg "products" products
 ```
 
 Login and get the user's ref.
 ```haskell
-  userRef <- rpc recorder "login" login
+  userRef <- rpc cfg "login" login
                                   ( Credentials
                                      { username = "a@example.com"
                                      , password = "password"
@@ -327,19 +330,19 @@ Login and get the user's ref.
 ```
 Get the user and unpack the user's cart.
 ```haskell
-  User { cart } <- get recorder "user" userRef
+  User { cart } <- get cfg "user" userRef
 ```
 Get the cart unpack the items.
 ```haskell
-  Cart { items } <- get recorder "cart" cart
+  Cart { items } <- get cfg "cart" cart
 ```
 Add the first product to the user's cart's items.
 ```haskell
-  insert recorder "items" items firstProduct
+  insert cfg "items" items firstProduct
 ```
 Checkout.
 ```haskell
-  rpc recorder "checkout" checkout cart
+  rpc cfg "checkout" checkout cart
 ```
 
 Port is hard coded to 3000 for this example
