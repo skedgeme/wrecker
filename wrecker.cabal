@@ -1,5 +1,5 @@
 name:                wrecker
-version:             0.1.1.1
+version:             0.1.1.2
 synopsis:            A HTTP Performance Benchmarker
 description:
  'wrecker' is a library for creating HTTP benchmarks. It is designed for
@@ -80,7 +80,7 @@ executable example-server
                      , wai
                      , network
   cpp-options: -D_SERVER_IS_MAIN_
-  ghc-options: -Wall -Wno-unused-do-bind -Wno-unused-top-binds -threaded -pgmL markdown-unlit -rtsopts -with-rtsopts=-N
+  ghc-options: -O2 -Wall -Wno-unused-do-bind -Wno-unused-top-binds -threaded -pgmL markdown-unlit -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
 executable example-client
@@ -95,7 +95,7 @@ executable example-client
                      , text
                      , http-client
   cpp-options: -D_CLIENT_IS_MAIN_
-  ghc-options: -Wall -Wno-unused-top-binds -Wno-unused-do-bind -threaded -pgmL markdown-unlit -rtsopts -with-rtsopts=-N
+  ghc-options: -O2 -Wall -Wno-unused-top-binds -Wno-unused-do-bind -threaded -pgmL markdown-unlit -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
 executable example
@@ -117,7 +117,7 @@ executable example
                      , next-ref
                      , wai
                      , network
-  ghc-options: -Wall -Wno-unused-do-bind -O2 -threaded -pgmL markdown-unlit  -rtsopts -with-rtsopts=-N
+  ghc-options: -O2 -Wall -Wno-unused-do-bind -O2 -threaded -pgmL markdown-unlit  -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
 test-suite wrecker-test
