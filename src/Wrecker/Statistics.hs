@@ -33,7 +33,7 @@ emptyVarianceAndMean = VarianceAndMean
   }
 
 stableVarianceStep :: VarianceAndMean -> Double -> VarianceAndMean
-stableVarianceStep VarianceAndMean {..} !newValue =
+stableVarianceStep (!(VarianceAndMean {..})) !newValue =
   let !newCount     = varCount + 1
       !newMean      = varMean + ((newValue - varMean) / newCount)
       !newMeanDiff  = varMeanDiff + ((newValue - varMean)*(newValue - newMean))
@@ -44,17 +44,17 @@ insertHist h _ = h
 
 -- | These are the
 data Statistics = Statistics
-  { sVarMean   :: !VarianceAndMean
+  { sVarMean   :: {-# UNPACK #-} !VarianceAndMean
   -- ^ Combined variance and mean. This type contains information useful for
   --   incremental computation of the variance and mean. To get the individual
   --   components use 'variance' and 'mean'.
-  , sMax       :: !Double
+  , sMax       :: {-# UNPACK #-} !Double
   -- ^ The maximum time
-  , sMin       :: !Double
+  , sMin       :: {-# UNPACK #-} !Double
   -- ^ The maximum time
-  , sHistogram :: !Histogram
+  , sHistogram :: {-# UNPACK #-} !Histogram
   -- ^ A histogram of times
-  , sTotal     :: !Double
+  , sTotal     :: {-# UNPACK #-} !Double
   -- ^ The total time
   } deriving (Show, Eq, Ord)
 
@@ -79,7 +79,7 @@ emptyStatistics = Statistics
   }
 
 stepStatistics :: Statistics -> Double -> Statistics
-stepStatistics stats value = stats
+stepStatistics !stats !value = stats
      { sVarMean   = stableVarianceStep (sVarMean stats) value
      , sMax       = max (sMax stats) value
      , sMin       = min (sMin stats) value
@@ -109,7 +109,7 @@ emptyResultStatistics = ResultStatistics
   }
 
 stepResultStatistics :: ResultStatistics -> RunResult -> ResultStatistics
-stepResultStatistics stats = \case
+stepResultStatistics !stats = \case
   Success      { .. } -> stats { rs2xx    = stepStatistics (rs2xx    stats)
                                                            resultTime
                                , rsRollup = stepStatistics (rsRollup stats)

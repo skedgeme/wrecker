@@ -29,7 +29,6 @@ import Network.Wai.Handler.Warp
   , openFreePort
   , Port
   )
--- import Data.Default ()
 import GHC.Generics
 import Data.Aeson hiding (json)
 import Data.Text (Text)
@@ -45,6 +44,7 @@ import qualified Network.Wai.Handler.Warp as Warp
 import qualified Network.Wai as Wai
 import Network.Socket (Socket)
 import qualified Network.Socket as N
+import Control.Exception
 
 newtype Envelope a = Envelope { value :: a }
   deriving (Show, Eq, Generic, ToJSON)
@@ -137,7 +137,7 @@ app Root {..} port = do
           |]
 
   Scotty.get "/users" $ do
-    --sleepDist gen users
+    -- sleepDist gen users
     jsonE [aesonQQ|
           [ #{host <> "/users/0"}
           ]
@@ -189,7 +189,7 @@ getASocket = \case
   Just port -> do s <- N.socket N.AF_INET N.Stream N.defaultProtocol
                   localhost <- N.inet_addr "127.0.0.1"
                   N.bind s (N.SockAddrInet (fromIntegral port) localhost)
-                  N.listen s 1
+                  N.listen s 100
                   return (port, s)
 
   Nothing   -> openFreePort
@@ -218,10 +218,12 @@ main = do
   (ref, recorderThread, recorder) <- newStandaloneRecorder
   scottyApp <- Scotty.scottyApp $ app (pure 0) port
 
-  Warp.runSettingsSocket defaultSettings socket
+  (Warp.runSettingsSocket defaultSettings socket
                                         $ recordMiddleware recorder
-                                        $ scottyApp
-  N.close socket
-  Immortal.stop recorderThread
-  allStats <- NextRef.readLast ref
-  putStrLn $ Wrecker.pprStats Nothing allStats
+                                        $ scottyApp) `finally` 
+    ( do N.close socket
+         Immortal.stop recorderThread
+         allStats <- NextRef.readLast ref
+         putStrLn $ Wrecker.pprStats Nothing allStats
+    )
+

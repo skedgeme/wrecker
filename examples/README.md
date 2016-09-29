@@ -86,7 +86,6 @@ main = do
  options <- runParser
  -- wait for the server to be ready
  waitFor port
-
  -- Start the client and close an MVar to signal when the thread has finished
  end <- newEmptyMVar
  forkIO $ do

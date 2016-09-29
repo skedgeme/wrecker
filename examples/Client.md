@@ -111,7 +111,7 @@ import GHC.Generics
 import Data.ByteString.Lazy (ByteString)
 import Data.Text (Text)
 import Data.Text as T
-import Network.HTTP.Client (responseBody)
+import Network.HTTP.Client (responseBody, defaultManagerSettings)
 ```
 
 ## Make a Somewhat Generic JSON API
@@ -302,7 +302,7 @@ We can now easily write our first script!
 
 ```haskell
 testScript :: Int -> Recorder -> IO ()
-testScript port recorder = SWreq.withSession $ \sess -> do
+testScript port recorder = SWreq.withSessionControl Nothing defaultManagerSettings $ \sess -> do
   let cfg = (sess, recorder)
 ```
 Bootstrap the script and get all the URLs for the endpoints. Unpack

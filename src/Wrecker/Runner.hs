@@ -25,6 +25,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.HashMap.Strict as H
 import Data.HashMap.Strict (HashMap)
 import qualified Control.Immortal as Immortal
+import qualified Network.HTTP.Client as HTTP
 -- TODO configure whether errors are used in times or not
 
 {- | Typically 'wrecker' will control benchmarking actions. Howeve,r in some situations
@@ -81,13 +82,17 @@ runAction logger timeoutTime concurrency runStyle action recorder = do
                    $ BoundedThreadGroup.forkIO threadLimit $ do
                      rec <- takeRecorder
                      handle (\(e :: SomeException) -> do
-                              logWarn logger $ show e
-                              addEvent recorder $ Error
-                                                   { resultTime = 0
-                                                   , exception  = e
-                                                   , name       = "__UNKNOWN__"
-                                                   }
-                              addEvent rec End
+                              case fromException e of
+                                Just (he :: HTTP.HttpException) 
+                                  -> void $ logWarn logger $ show he
+                                Nothing -> do
+                                  logWarn logger $ show e
+                                  addEvent recorder $ Error
+                                                       { resultTime = 0
+                                                       , exception  = e
+                                                       , name       = "__UNKNOWN__"
+                                                       }
+                                  addEvent rec End
                             )
                             $ do
                                 action rec

@@ -49,6 +49,14 @@ For this example `stub` server.
 }
 ```
 
+### Memory Use 
+
+`wrecker` calculates statistics incrementally and is able to use a constant amount of memory regardless of the length of time it is run.
+
+Here is a heap snapshot for a thousand concurrent connections.
+
+![Heap Snapshot](/memoryProfile.png?raw=true "Heap Snapshot")
+
 ### Running Examples
  - To run whole benchmark example `cabal run example`
  - Just the client `cabal run example-client `
