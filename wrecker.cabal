@@ -35,6 +35,7 @@ library
                  , Wrecker.Options
                  , Wrecker.Statistics
                  , Wrecker.Logger
+                 , Network.Wreq.Wrecker
   build-depends: base >= 4.7 && < 5
                , stm
                , stm-chans
@@ -47,7 +48,7 @@ library
                , time
                , clock
                , text
-               , http-client >= 0.4 && < 0.5
+               , http-client
                , http-types
                , tabular
                , deepseq
@@ -61,6 +62,11 @@ library
                , unagi-chan
                , next-ref
                , immortal
+               , wreq
+               , connection
+               , http-client-tls >= 0.3.3 && < 0.4
+               , data-default
+               , network-uri
   default-language:    Haskell2010
   ghc-options:         -Wall -fno-warn-unused-do-bind -pgmL markdown-unlit
 
@@ -94,6 +100,7 @@ executable example-client
                      , bytestring
                      , text
                      , http-client
+                     , connection
   cpp-options: -D_CLIENT_IS_MAIN_
   ghc-options: -O2 -Wall -Wno-unused-top-binds -Wno-unused-do-bind -threaded -pgmL markdown-unlit -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
@@ -117,6 +124,7 @@ executable example
                      , next-ref
                      , wai
                      , network
+                     , connection
   ghc-options: -O2 -Wall -Wno-unused-do-bind -O2 -threaded -pgmL markdown-unlit  -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
@@ -142,5 +150,6 @@ test-suite wrecker-test
                , network
                , immortal
                , next-ref
+               , connection
   ghc-options: -Wall -Wno-unused-do-bind -O2 -threaded  -pgmL markdown-unlit -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010

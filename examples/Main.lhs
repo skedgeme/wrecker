@@ -89,7 +89,7 @@ main = do
  -- Start the client and close an MVar to signal when the thread has finished
  end <- newEmptyMVar
  forkIO $ do
-     run options $ Client.benchmarks port
+     run options =<< Client.benchmarks port
      putMVar end ()
 
  -- Wait for the client thread to finish and then return
