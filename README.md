@@ -13,7 +13,7 @@ cabal run example -- --concurrency=1000 --run-timed=1000000000 --interactive +RT
 
 ### Example Script
 
-```
+```haskell
 testScript :: Int -> ConnectionContext -> Recorder -> IO ()
 testScript port cxt rec = withSession cxt rec $ \sess -> do
   Root { products
