@@ -122,11 +122,11 @@ a quick wrapper around `wreq` specialized to JSON
 We wrap all JSON in sent to and from the server in an envelope,
 mainly so we can also serialize a json object as opposed to an array.
 
-The envelope is serialized to `JSON` with the following format
+The envelope is serialized to JSON with the following format
 ```json
 {"value" : RESPONSE_SPECIFIC_OUTPUT }
 ```
-It is represented in `Haskell` as
+It is represented in Haskell as
 ```haskell
 data Envelope a = Envelope { value :: a }
   deriving (Show, Eq, Generic, FromJSON, ToJSON)
@@ -158,7 +158,7 @@ The `Envelope` only exists to transmit data between the server and the browser.
 
 ### Hide the Envelope
 
-We hide the `Envelope` in `JSON` specialized `get`s and `post`s.
+We hide the `Envelope` in JSON specialized `get`s and `post`s.
 
 ```haskell
 jsonGet :: FromJSON a => Session -> Text -> IO a
@@ -171,7 +171,7 @@ jsonPost sess url = liftEnvelope $ WW.post sess (T.unpack url)
 ## <a name="Make_a_Somewhat_Generic_REST_API"> Make a Somewhat Generic REST API
 
 ### Resource References
-Working with JSON is okay, but this is `Haskell` we would rather work with
+Working with JSON is okay, but this is Haskell we would rather work with
 types.
 
 We represent resource urls using the type `Ref`
