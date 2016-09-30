@@ -20,6 +20,9 @@ program. 'Interactive' will show partial results as the program updates.
 data DisplayMode = Interactive | NonInteractive
   deriving (Show, Eq, Read)
 
+data URLDisplay = Path | Full
+  deriving (Show, Eq, Read)
+
 data Options = Options
   { concurrency           :: Int
   -- ^ The number of simulatanous connections
@@ -44,6 +47,7 @@ data Options = Options
   -- ^ Dump the results to JSON file
   , silent                :: Bool
   -- ^ Set 'silent' to true to disable all output.
+  , urlDisplay              :: URLDisplay
   } deriving (Show, Eq)
 
 -- | 'defaultOptions' provides sensible default for the 'Options'
@@ -60,6 +64,7 @@ defaultOptions = Options
   , requestNameColumnSize = Nothing
   , outputFilePath        = Nothing
   , silent                = False
+  , urlDisplay              = Path
   }
 
 data PartialOptions = PartialOptions
@@ -73,20 +78,22 @@ data PartialOptions = PartialOptions
   , mRequestNameColumnSize :: Maybe Int
   , mOutputFilePath        :: Maybe FilePath
   , mSilent                :: Maybe Bool
+  , murlDisplay              :: Maybe URLDisplay
   } deriving (Show, Eq)
 
 instance Monoid PartialOptions where
   mempty = PartialOptions
-            { mConcurrency           = Just $ concurrency           defaultOptions
-            , mBinCount              = Just $ binCount              defaultOptions
-            , mRunStyle              = Just $ runStyle              defaultOptions
-            , mTimeoutTime           = Just $ timeoutTime           defaultOptions
-            , mDisplayMode           = Just $ displayMode           defaultOptions
-            , mLogLevel              = Just $ logLevel              defaultOptions
-            , mMatch                 = Just $ match                 defaultOptions
-            , mRequestNameColumnSize = requestNameColumnSize        defaultOptions
-            , mOutputFilePath        = outputFilePath               defaultOptions
-            , mSilent                = Just $ silent                defaultOptions
+            { mConcurrency           = Just $ concurrency    defaultOptions
+            , mBinCount              = Just $ binCount       defaultOptions
+            , mRunStyle              = Just $ runStyle       defaultOptions
+            , mTimeoutTime           = Just $ timeoutTime    defaultOptions
+            , mDisplayMode           = Just $ displayMode    defaultOptions
+            , mLogLevel              = Just $ logLevel       defaultOptions
+            , mMatch                 = Just $ match          defaultOptions
+            , mRequestNameColumnSize = requestNameColumnSize defaultOptions
+            , mOutputFilePath        = outputFilePath        defaultOptions
+            , mSilent                = Just $ silent         defaultOptions
+            , murlDisplay              = Just $ urlDisplay       defaultOptions
             }
   mappend x y = PartialOptions
                   { mConcurrency           =  mConcurrency x <|> mConcurrency y
@@ -101,6 +108,7 @@ instance Monoid PartialOptions where
                   , mOutputFilePath        =  mOutputFilePath x
                                           <|> mOutputFilePath y
                   , mSilent                =  mSilent      x <|> mSilent      y
+                  , murlDisplay              =  murlDisplay    x <|> murlDisplay    y
                   }
 
 completeOptions :: PartialOptions -> Maybe Options
@@ -117,6 +125,7 @@ completeOptions options =
       , mRequestNameColumnSize = requestNameColumnSize
       , mOutputFilePath        = outputFilePath
       , mSilent                = Just silent
+      , murlDisplay              = Just urlDisplay
       } -> Just $ Options {..}
     _ -> Nothing
 
@@ -178,7 +187,10 @@ pPartialOptions
       (  long "silent"
       <> help "Disable all output"
       )
-
+  <*> optional
+      (  Path <$ switch (long "relative-url-display")
+     <|> Full <$ switch (long "absolute-url-display")
+      )
 {- | Run the command line parse and return the 'Options'
 
 'runParser' can parse the following options

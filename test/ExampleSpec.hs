@@ -12,6 +12,8 @@ import Network.Wai.Handler.Warp (Port)
 import Data.Maybe (fromJust)
 import Control.Concurrent.NextRef (NextRef)
 import qualified Control.Concurrent.NextRef as NextRef
+import qualified Network.Connection as Connection
+import Debug.Trace
 
 {-
   This file tests how well `wrecker` can detect a "signal".
@@ -66,14 +68,18 @@ subtractGaussian x y
 urlStatsToDist :: HashMap String ResultStatistics
                -> Server.Root Gaussian
 urlStatsToDist stats =
-  let gaussians = fmap toDist stats
-      Just root            = H.lookup "root"     gaussians
-      Just products        = H.lookup "products" gaussians
-      Just login           = H.lookup "login"    gaussians
-      Just usersIndex      = H.lookup "user"     gaussians
-      Just cartsIndex      = H.lookup "cart"     gaussians
-      Just cartsIndexItems = H.lookup "items"    gaussians
-      Just checkout        = H.lookup "checkout" gaussians
+  let gaussians =  map (\(key, value) -> ( Stats.urlToPathPieceKey key
+                                        , toDist value
+                                        )
+                      )
+                $ H.toList stats
+      Just root            = lookup "/root"          $ trace (show $ map fst gaussians) $ gaussians
+      Just products        = lookup "/products"      gaussians
+      Just login           = lookup "/login"         gaussians
+      Just usersIndex      = lookup "/users/0"       gaussians
+      Just cartsIndex      = lookup "/carts/0"       gaussians
+      Just cartsIndexItems = lookup "/carts/0/items" gaussians
+      Just checkout        = lookup "/checkout"      gaussians
 
   in Server.Root {..}
 
@@ -124,17 +130,16 @@ instance Approx a => Approx (Server.Root a) where
 
 
 runWrecker :: Int -> IO AllStats
-runWrecker port
-   =  let key = "key"
-   in fromJust
-   .  H.lookup key
-  <$> Wrecker.run (defaultOptions
-                    { runStyle    = RunCount 250
-                    , displayMode = Interactive
-                    }
-                  )
-                  [ (key, Client.testScript port)
-                  ]
+runWrecker port = do
+  let key = "key"
+  cxt <- Connection.initConnectionContext
+  fromJust . H.lookup key <$> Wrecker.run (defaultOptions
+                                             { runStyle    = RunCount 250
+                                             , displayMode = Interactive
+                                             }
+                                          )
+                                          [ (key, Client.testScript port cxt)
+                                          ]
 
 calculateOverhead :: IO (Server.Root Gaussian)
 calculateOverhead = do
@@ -144,7 +149,7 @@ calculateOverhead = do
 
   -- This how long a 'null' request takes
   serverStats <- NextRef.readLast ref
-  putStrLn $ Stats.pprStats Nothing serverStats
+  putStrLn $ Stats.pprStats Nothing Path serverStats
   killThread threadId
 
   return $ substractDist (urlStatsToDist $ aPerUrl allStats   )

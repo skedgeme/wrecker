@@ -1,0 +1,3 @@
+[submodule "dependencies/wreq"]
+	path = dependencies/wreq
+	url = https://github.com/bos/wreq
