@@ -13,6 +13,7 @@ import qualified Data.Vector.Unboxed as U
 import Data.Aeson (object, ToJSON (..), (.=), Value (..))
 import Data.List (sortBy)
 import Data.Function
+import qualified Network.URI as URI
 
 data Histogram = Histogram
   deriving (Show, Eq, Ord)
@@ -86,6 +87,9 @@ stepStatistics !stats !value = stats
      , sHistogram = insertHist (sHistogram stats) value
      , sTotal     = sTotal stats + value
      }
+
+urlToPathPieceKey :: String -> String
+urlToPathPieceKey url = maybe url URI.uriPath $ URI.parseURI url
 
 {- | This type includes statistics for all of the result values we can detect.
      This type is used by AllStats to compute per key (URL) statistics among
@@ -231,29 +235,38 @@ statToRow x
   = [ printf "%.4f" $ mean     $ rs2xx x
     , printf "%.8f" $ variance $ rs2xx x
     , printf "%.4f" $ sMax     $ rs2xx x
-    
-    , let theMin = sMin $ rs2xx x 
-      in if theMin == 1e32 then 
+
+    , let theMin = sMin $ rs2xx x
+      in if theMin == 1e32 then
         "N/A"
-      else 
+      else
         printf "%.4f" $ sMin   $ rs2xx x
-        
+
     , show $ count2xx x
     , show $ count4xx x
     , show $ count5xx x
     , show $ countFailed x
     ,  printf "%.4f" $ errorRate x
-    , renderHistogram $ mempty
+--    , renderHistogram $ mempty
     ]
 
-pprStats :: Maybe Int -> AllStats -> String
-pprStats nameSize stats = AsciiArt.render id id id $ statsTable nameSize stats
+pprStats :: Maybe Int -> URLDisplay -> AllStats -> String
+pprStats nameSize urlDisplay stats
+  = AsciiArt.render id id id
+  $ statsTable nameSize urlDisplay stats
 
-statsTable ::  Maybe Int -> AllStats -> Table String String String
-statsTable nameSize AllStats {..}
+adjustKey ::Maybe Int -> URLDisplay -> String -> String
+adjustKey keySize urlDisplay key
+  = maybe id take keySize
+  $ case urlDisplay of
+      Path -> urlToPathPieceKey key
+      Full -> key
+
+statsTable ::  Maybe Int -> URLDisplay -> AllStats -> Table String String String
+statsTable urlSize urlDisp AllStats {..}
   = let sortedPerUrl = sortBy (compare `on` fst) $ H.toList aPerUrl
   in Table (Group SingleLine
-          $ map (Header . maybe id take nameSize . fst) sortedPerUrl
+          $ map (Header . adjustKey urlSize urlDisp . fst) sortedPerUrl
           )
           (Group SingleLine [ Header "mean"
                             , Header "variance"
@@ -264,7 +277,7 @@ statsTable nameSize AllStats {..}
                             , Header "5xx Count"
                             , Header "Failure Count"
                             , Header "Error Rate"
-                            , Header "Histogram"
+--                            , Header "Histogram"
                             ]
           )
           (map (statToRow . snd) sortedPerUrl)
@@ -274,7 +287,9 @@ statsTable nameSize AllStats {..}
 
 printStats :: Options -> AllStats -> IO ()
 printStats options sampler
-  = putStrLn $ pprStats (requestNameColumnSize options) sampler
+  = putStrLn $ pprStats (requestNameColumnSize options)
+                        (urlDisplay options)
+                        sampler
 ------------------------------------------------------------------------------
 -- JSON Serialization
 ------------------------------------------------------------------------------

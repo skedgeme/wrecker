@@ -171,13 +171,13 @@ stop (_, threadId, ref) = do
 
 toKey :: Wai.Request -> String
 toKey x = case Wai.pathInfo x of
-  ["root"]                  -> "root"
-  ["products"]              -> "products"
-  "carts" : _ : "items" : _ -> "items"
-  "carts" : _ : _           -> "cart"
-  "users" : _               -> "user"
-  ["login"]                 -> "login"
-  ["checkout"]              -> "checkout"
+  ["root"]                  -> "/root"
+  ["products"]              -> "/products"
+  "carts" : _ : "items" : _ -> "/carts/0/items"
+  "carts" : _ : _           -> "/carts/0"
+  "users" : _               -> "/users/0"
+  ["login"]                 -> "/login"
+  ["checkout"]              -> "/checkout"
   _ -> error "FAIL! UNKNOWN REQUEST FOR EXAMPLE!"
 
 recordMiddleware :: Recorder -> Wai.Application -> Wai.Application
@@ -220,10 +220,9 @@ main = do
 
   (Warp.runSettingsSocket defaultSettings socket
                                         $ recordMiddleware recorder
-                                        $ scottyApp) `finally` 
+                                        $ scottyApp) `finally`
     ( do N.close socket
          Immortal.stop recorderThread
          allStats <- NextRef.readLast ref
-         putStrLn $ Wrecker.pprStats Nothing allStats
+         putStrLn $ Wrecker.pprStats Nothing Path allStats
     )
-
