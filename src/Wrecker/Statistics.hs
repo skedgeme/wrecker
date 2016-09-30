@@ -231,7 +231,13 @@ statToRow x
   = [ printf "%.4f" $ mean     $ rs2xx x
     , printf "%.8f" $ variance $ rs2xx x
     , printf "%.4f" $ sMax     $ rs2xx x
-    , printf "%.4f" $ sMin     $ rs2xx x
+    
+    , let theMin = sMin $ rs2xx x 
+      in if theMin == 1e32 then 
+        "N/A"
+      else 
+        printf "%.4f" $ sMin   $ rs2xx x
+        
     , show $ count2xx x
     , show $ count4xx x
     , show $ count5xx x

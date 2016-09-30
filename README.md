@@ -6,10 +6,10 @@
 Output from running
 
 ```bash
-cabal run example -- --concurrency=20 --run-count=4 --display-mode=Interactive
+cabal run example -- --concurrency=1000 --run-timed=1000000000 --interactive +RTS -N -I0
 ```
 
-![Example terminal output](/examples/example.gif?raw=true "Example Terminal Output")
+![Example terminal output](/examples/new-example.gif?raw=true "Example Terminal Output")
 
 ### Example Script
 
@@ -49,7 +49,7 @@ For this example `stub` server.
 }
 ```
 
-### Memory Use 
+### Memory Use
 
 `wrecker` calculates statistics incrementally and is able to use a constant amount of memory regardless of the length of time it is run.
 

@@ -154,9 +154,9 @@ pPartialOptions
       (  long "timeout-time"
       <> help "How long to wait for all requests to finish"
       )
-  <*> optionalOption
-      (  long "display-mode"
-      <> help "Display results interactively"
+  <*> optional
+      (  Interactive    <$ switch (long "interactive")
+     <|> NonInteractive <$ switch (long "non-interactive")
       )
   <*> optionalOption
       (  long "log-level"
