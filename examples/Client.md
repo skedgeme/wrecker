@@ -147,7 +147,7 @@ The `Envelope` only exists to transmit data between the server and the browser.
   fromEnvelope x = fmap (value . responseBody) . Wreq.asJSON =<< x
   ```
 
-- If we wrap inputs and unwrap outputs we can wrap a whole function.
+- If we wrap inputs and unwrap outputs so we can wrap a whole function.
 
   ```haskell
   liftEnvelope :: (ToJSON a, FromJSON b)
