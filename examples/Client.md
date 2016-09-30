@@ -1,8 +1,8 @@
-# Building a API client for profiling with `wrecker`
+# Building a Profiling Client with `wrecker`
 
-Unlike most HTTP benchmarking applications, `wrecker` is intended to benchmark
-HTTP calls inline with other forms of processing. This allows for complex
-interactions necessary to benchmark certain API endpoints.
+`wrecker` is intended to benchmark HTTP calls inline with other forms of
+processing. This allows for complex interactions necessary to benchmark
+certain API endpoints.
 
 ## TL;DR
 
@@ -62,8 +62,10 @@ This is Haskell, so first we turn on the extensions we would like to use.
 - `NamedFieldPuns` will let us destructure records conveniently. 
 - `DeriveAnyClass` and `DeriveGeneric` are used turned on so the compiler
   can generate the JSON conversion functions for us automatically.
-- `OverloadedStrings` is a here so redditors don't yell at me for using `String` instead of `Text`
-- `DuplicateRecordFields` let's us use the `username` field in two records ... welcome to the future.
+- `OverloadedStrings` is a here so redditors don't yell at me for using
+  `String` instead of `Text`
+- `DuplicateRecordFields` let's us use the `username` field in two records ...
+  welcome to the future.
 - `CPP` ... ignore that ...
 
 ```haskell
@@ -218,23 +220,26 @@ for our more specific REST and RPC calls.
 - `get` takes a `Ref a` and returns an `a`. The `a` could be something
   like `Cart` or it could be a list like `[Ref a]`.
 
-    ```haskell
-    get :: FromJSON a => Session -> Ref a -> IO a
-    get sess (Ref url) = jsonGet sess url
-    ```
+  ```haskell
+  get :: FromJSON a => Session -> Ref a -> IO a
+  get sess (Ref url) = jsonGet sess url
+  ```
+
 - `insert` takes a `Ref` to a list and appends an item to it. It returns the
   reference that you passed in because why not.
 
-    ```haskell
-    insert :: ToJSON a => Session -> Ref [a] -> a -> IO (Ref [a])
-    insert sess (Ref url) = jsonPost sess url
-    ```
-- `rpc` unpacks the URL for the RPC endpoint and `POST`s the input, returning the output.
+  ```haskell
+  insert :: ToJSON a => Session -> Ref [a] -> a -> IO (Ref [a])
+  insert sess (Ref url) = jsonPost sess url
+  ```
 
-    ```haskell
-    rpc :: (ToJSON a, FromJSON b) => Session -> RPC a b -> a -> IO b
-    rpc sess (RPC url) = jsonPost sess url
-    ```
+- `rpc` unpacks the URL for the RPC endpoint and `POST`s the input, returning
+  the output.
+
+  ```haskell
+  rpc :: (ToJSON a, FromJSON b) => Session -> RPC a b -> a -> IO b
+  rpc sess (RPC url) = jsonPost sess url
+  ```
 
 ## <a name="The_Example_API"> The Example API
 
@@ -385,6 +390,7 @@ Port is hard coded to 3000 for this example
 ```haskell
 benchmarks :: Int -> IO [(String, Recorder -> IO ())]
 benchmarks port = do
+  -- Create a TLS context once
   cxt <- Connection.initConnectionContext
   return [("test0", testScript port cxt)]
 
