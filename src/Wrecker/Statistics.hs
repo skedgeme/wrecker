@@ -247,7 +247,7 @@ statToRow x
     , show $ count5xx x
     , show $ countFailed x
     ,  printf "%.4f" $ errorRate x
-    , renderHistogram $ mempty
+--    , renderHistogram $ mempty
     ]
 
 pprStats :: Maybe Int -> URLDisplay -> AllStats -> String
@@ -277,7 +277,7 @@ statsTable urlSize urlDisp AllStats {..}
                             , Header "5xx Count"
                             , Header "Failure Count"
                             , Header "Error Rate"
-                            , Header "Histogram"
+--                            , Header "Histogram"
                             ]
           )
           (map (statToRow . snd) sortedPerUrl)
