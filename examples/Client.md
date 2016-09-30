@@ -35,10 +35,17 @@ the necessary utilities and documents every line.
 Most of the code in this file is "generic". It is the type of boilerplate you
 make once for an API client.
 
-You don't need to make a polish API client to use `wrecker`, just look at
-TODO_MAKE_AESON_LENS_EXAMPLE to see how to use `record` with less setup.
+You don't need to make a polished typed API client to use `wrecker`,
+just look at TODO_MAKE_AESON_LENS_EXAMPLE.
 
-## Boring Haskell Prelude
+## Outline
+ - [Boring Haskell Prelude](#Boring_Haskell_Prelude)
+ - [Make a Somewhat Generic JSON API](#Make_a_Somewhat_Generic_JSON_API)
+ - [Make a Somewhat Generic REST API](#Make_a_Somewhat_Generic_REST_API)
+ - [The Example API](#The_Example_API)
+ - [Profiling Script](#Profiling_Script)
+
+## <a name="Boring_Haskell_Prelude"> Boring Haskell Prelude
 
 This is Haskell, so first we turn on the extensions we would like to use.
 
@@ -57,6 +64,7 @@ This is Haskell, so first we turn on the extensions we would like to use.
   can generate the JSON conversion functions for us automatically.
 - `OverloadedStrings` is a here so redditors don't yell at me for using `String` instead of `Text`
 - `DuplicateRecordFields` let's us use the `username` field in two records ... welcome to the future.
+- `CPP` ... ignore that ...
 
 ```haskell
 #ifndef _CLIENT_IS_MAIN_
@@ -65,10 +73,7 @@ module Client where
 ```
 Not the drones ...
 
-
-### The Essence of `wrecker` is `record`
-
-Introducing `wrecker`
+### The Essence of `wrecker`
 
 ```haskell
 import Wrecker (defaultMain, Recorder)
@@ -87,6 +92,7 @@ import Data.Aeson
 We need JSON so of course we are using `aeson`.
 
 ```haskell
+import Network.Wreq (Response)
 import qualified Network.Wreq as Wreq
 import Network.Wreq.Wrecker (Session)
 import qualified Network.Wreq.Wrecker as WW
@@ -106,7 +112,7 @@ import Data.Text as T
 import Network.HTTP.Client (responseBody)
 ```
 
-## Make a Somewhat Generic JSON API
+## <a name="Make_a_Somewhat_Generic_JSON_API"> Make a Somewhat Generic JSON API
 
 `wreq` is pretty easy to use for JSON APIs but it could be easier. Here we make
 a quick wrapper around `wreq` specialized to JSON
@@ -116,38 +122,43 @@ a quick wrapper around `wreq` specialized to JSON
 We wrap all JSON in sent to and from the server in an envelope,
 mainly so we can also serialize a json object as opposed to an array.
 
+The envelope is serialized to `JSON` with the following format
+```json
+{"value" : RESPONSE_SPECIFIC_OUTPUT }
+```
+It is represented in `Haskell` as
 ```haskell
-data Envelope a = Envelope { value :: a } -- <=> -- {"value" : toJSON a}
+data Envelope a = Envelope { value :: a }
   deriving (Show, Eq, Generic, FromJSON, ToJSON)
 ```
 
 The `Envelope` only exists to transmit data between the server and the browser.
 - We wrap values going to the server in an `Envelope`
 
-    ```haskell
-    toEnvelope :: ToJSON a => a -> Value
-    toEnvelope = toJSON . Envelope
-    ```
+  ```haskell
+  toEnvelope :: ToJSON a => a -> Value
+  toEnvelope = toJSON . Envelope
+  ```
 
 - We unwrap values coming from the server in `Envelope`.
 
-    ```haskell
-    fromEnvelope :: FromJSON a => IO (Wreq.Response ByteString) -> IO a
-    fromEnvelope x = fmap (value . responseBody) . Wreq.asJSON =<< x
-    ```
+  ```haskell
+  fromEnvelope :: FromJSON a => IO (Response ByteString) -> IO a
+  fromEnvelope x = fmap (value . responseBody) . Wreq.asJSON =<< x
+  ```
 
 - If we wrap inputs and unwrap outputs we can wrap a whole function.
 
-    ```haskell
-    liftEnvelope :: (ToJSON a, FromJSON b)
-                 => (Value -> IO (Wreq.Response ByteString))
-                 -> (a     -> IO b                         )
-    liftEnvelope f = fromEnvelope . f . toEnvelope
-    ```
+  ```haskell
+  liftEnvelope :: (ToJSON a, FromJSON b)
+               => (Value -> IO (Response ByteString))
+               -> (a     -> IO b                    )
+  liftEnvelope f = fromEnvelope . f . toEnvelope
+  ```
 
-### Wrap HTTP Calls with `record`
+### Hide the Envelope
 
-Not only do we want to wrap and unwrap types from our `Envelope`.
+We hide the `Envelope` in `JSON` specialized `get`s and `post`s.
 
 ```haskell
 jsonGet :: FromJSON a => Session -> Text -> IO a
@@ -157,9 +168,11 @@ jsonPost :: (ToJSON a, FromJSON b) => Session -> Text -> a -> IO b
 jsonPost sess url = liftEnvelope $ WW.post sess (T.unpack url)
 ```
 
-## Make a Somewhat Generic REST API
+## <a name="Make_a_Somewhat_Generic_REST_API"> Make a Somewhat Generic REST API
 
 ### Resource References
+Working with JSON is okay, but this is `Haskell` we would rather work with
+types.
 
 We represent resource urls using the type `Ref`
 ```haskell
@@ -223,7 +236,7 @@ for our more specific REST and RPC calls.
     rpc sess (RPC url) = jsonPost sess url
     ```
 
-## The Example API
+## <a name="The_Example_API"> The Example API
 
 The API requires an initial call to the "/root" to obtain the URLs for
 subsequent calls
@@ -319,7 +332,7 @@ data Credentials = Credentials
   } deriving (Eq, Show, Generic, ToJSON)   
 ```
 
-## Profiling Script
+## <a name="Profiling_Script"> Profiling Script
 
 We can now easily write our first script!
 
@@ -328,7 +341,7 @@ testScript :: Int -> ConnectionContext -> Recorder -> IO ()
 testScript port cxt rec = WW.withSession cxt rec $ \sess -> do
 ```
 Bootstrap the script and get all the URLs for the endpoints. Unpack
-`products`, `login` and `checkout` for use later down.
+`products`, `login` and `checkout` refs for use later down.
 
 ```haskell
   Root { products
