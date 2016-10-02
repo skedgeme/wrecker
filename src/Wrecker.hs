@@ -15,6 +15,7 @@ module Wrecker ( Recorder
                , record
                , run
                , Options          (..)
+               , URLDisplay       (..)
                , RunType          (..)
                , DisplayMode      (..)
                , defaultOptions

@@ -25,7 +25,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.HashMap.Strict as H
 import Data.HashMap.Strict (HashMap)
 import qualified Control.Immortal as Immortal
-import qualified Network.HTTP.Client as HTTP
+import qualified Network.HTTP.Client_0_5_3_2_SHIM as HTTP
 -- TODO configure whether errors are used in times or not
 
 {- | Typically 'wrecker' will control benchmarking actions. Howeve,r in some situations
@@ -83,7 +83,7 @@ runAction logger timeoutTime concurrency runStyle action recorder = do
                      rec <- takeRecorder
                      handle (\(e :: SomeException) -> do
                               case fromException e of
-                                Just (he :: HTTP.HttpException) 
+                                Just (he :: HTTP.HttpException)
                                   -> void $ logWarn logger $ show he
                                 Nothing -> do
                                   logWarn logger $ show e
@@ -167,7 +167,10 @@ printLoop options context vty sampler
   = fix $ \next -> takeNextRef sampler >>= \case
       Nothing      -> return ()
       Just allStats -> do
-        updateUI (requestNameColumnSize options) context allStats
+        updateUI (requestNameColumnSize options)
+                 (urlDisplay options)
+                 context
+                 allStats
         VTY.refresh vty
         next
 
@@ -178,14 +181,14 @@ processInputForCtrlC chan = forkIO $ forever $ do
     VTY.EvKey (VTY.KChar 'c') [VTY.MCtrl] -> raiseSignal sigINT
     _ -> return ()
 
-updateUI :: Maybe Int -> VTY.DisplayContext ->  AllStats -> IO ()
-updateUI nameSize displayContext stats
+updateUI :: Maybe Int -> URLDisplay -> VTY.DisplayContext ->  AllStats -> IO ()
+updateUI nameSize urlDisp displayContext stats
   = VTY.outputPicture displayContext
   $ VTY.picForImage
   $ VTY.vertCat
   $ map (VTY.string VTY.defAttr)
   $ lines
-  $ pprStats nameSize stats
+  $ pprStats nameSize urlDisp stats
 
 runInteractive :: Options -> (Recorder -> IO ()) -> IO AllStats
 runInteractive options action = do

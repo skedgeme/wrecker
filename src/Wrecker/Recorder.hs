@@ -4,7 +4,7 @@
 module Wrecker.Recorder where
 import           Control.Concurrent.STM
 import           Control.Concurrent.STM.TBMQueue
-import qualified Network.HTTP.Client as HTTP
+import qualified Network.HTTP.Client_0_5_3_2_SHIM as HTTP
 import qualified Network.HTTP.Types as HTTP
 import           System.Clock
 import           Control.Exception
@@ -111,6 +111,9 @@ record recorder key action = do
         endTime <- getTime Monotonic
         case e of
 #if MIN_VERSION_http_client(0,5,0)
+          HTTP.HttpExceptionRequest _ (HTTP.StatusCodeException resp _) -> do
+            let code = HTTP.statusCode $ HTTP.responseStatus resp
+#elif MIN_VERSION_http_client_zero_five_three_two_shim(0,5,0)
           HTTP.HttpExceptionRequest _ (HTTP.StatusCodeException resp _) -> do
             let code = HTTP.statusCode $ HTTP.responseStatus resp
 #else

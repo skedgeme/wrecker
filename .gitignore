@@ -7,3 +7,5 @@ dist
 *.hp
 *.ps
 .vagrant
+~*
+*~

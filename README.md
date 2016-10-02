@@ -13,25 +13,25 @@ cabal run example -- --concurrency=1000 --run-timed=1000000000 --interactive +RT
 
 ### Example Script
 
-```
-testScript :: Int -> Recorder -> IO ()
-testScript port recorder = do
+```haskell
+testScript :: Int -> ConnectionContext -> Recorder -> IO ()
+testScript port cxt rec = withSession cxt rec $ \sess -> do
   Root { products
        , login
        , checkout
-       }             <- get recorder "root"     (rootRef port)
-  firstProduct : _   <- get recorder "products" products
-  userRef            <- rpc recorder "login"    login
-                                                ( Credentials
-                                                  { userName = "a@example.com"
-                                                  , password = "password"
-                                                  }
-                                                )
-  User { usersCart } <- get recorder "user"     userRef
-  Cart { items }     <- get recorder "cart"     usersCart
+       }             <- get sess (rootRef port)
+  firstProduct : _   <- get sess products
+  userRef            <- rpc sess login
+                                  ( Credentials
+                                    { userName = "a@example.com"
+                                    , password = "password"
+                                    }
+                                  )
+  User { usersCart } <- get sess userRef
+  Cart { items }     <- get sess usersCart
 
-  insert "items" items firstProduct
-  rpc "checkout" checkout cart
+  insert sess items firstProduct
+  rpc sess checkout cart
 ```
 
 For this example `stub` server.
