@@ -28,6 +28,10 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs: src
+                , dependencies/http-client-tls-0.3.3-shim/http-client-tls
+                , dependencies/http-client-tls-0.3.3-shim/http-client/publicsuffixlist
+                , dependencies/http-client-tls-0.3.3-shim/http-client
+
   exposed-modules: Wrecker
                  , Wrecker.Recorder
                  , Wrecker.Runner
@@ -36,6 +40,26 @@ library
                  , Wrecker.Statistics
                  , Wrecker.Logger
                  , Network.Wreq.Wrecker
+
+  other-modules: Network.HTTP.Client_0_5_3_2_SHIM
+               , Network.HTTP.Client_0_5_3_2_SHIM.Body
+               , Network.HTTP.Client_0_5_3_2_SHIM.Connection
+               , Network.HTTP.Client_0_5_3_2_SHIM.Cookies
+               , Network.HTTP.Client_0_5_3_2_SHIM.Core
+               , Network.HTTP.Client_0_5_3_2_SHIM.Headers
+               , Network.HTTP.Client_0_5_3_2_SHIM.Internal
+               , Network.HTTP.Client_0_5_3_2_SHIM.Manager
+               , Network.HTTP.Client_0_5_3_2_SHIM.MultipartFormData
+               , Network.HTTP.Client_0_5_3_2_SHIM.Request
+               , Network.HTTP.Client_0_5_3_2_SHIM.Response
+               , Network.HTTP.Client_0_5_3_2_SHIM.Types
+               , Network.HTTP.Client_0_5_3_2_SHIM.Util
+               , Network.HTTP.Client.TLS_0_3_3_SHIM
+               , Network.PublicSuffixList.Lookup
+               , Network.PublicSuffixList.Types
+               , Network.PublicSuffixList.Serialize
+               , Network.PublicSuffixList.DataStructure
+
   build-depends: base >= 4.7 && < 5
                , stm
                , stm-chans
@@ -49,7 +73,6 @@ library
                , time
                , clock
                , text
-               , http-client-zero-five-three-two-shim
                , http-client
                , http-types
                , tabular
@@ -66,9 +89,24 @@ library
                , immortal
                , wreq
                , connection
-               , http-client-tls-zero-three-three-shim
                , data-default
                , network-uri
+               , blaze-builder
+               , containers
+               , streaming-commons
+               , case-insensitive
+               , base64-bytestring
+               , exceptions
+               , cookie
+               , data-default-class
+               , tls
+               , cryptonite
+               , memory
+               , mime-types
+               , transformers
+               , filepath
+               , random
+               , array
   default-language:    Haskell2010
   ghc-options:         -Wall -fno-warn-unused-do-bind -pgmL markdown-unlit
 
