@@ -54,9 +54,9 @@ data Options = Options
 --   types
 defaultOptions :: Options
 defaultOptions = Options
-  { concurrency           = 1
+  { concurrency           = 10
   , binCount              = 20
-  , runStyle              = RunCount 1
+  , runStyle              = RunTimed 10
   , timeoutTime           = 100000000
   , displayMode           = NonInteractive
   , logLevel              = LevelError
@@ -231,6 +231,3 @@ runParser = do
   case completeOptions partialOptions of
     Nothing -> throwIO $ userError ""
     Just x  -> return x
-
-
-
