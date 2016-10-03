@@ -1,5 +1,5 @@
 ### `wrecker`
-`wrecker` is a HTTP benchmarking library for profiling several API actions.
+`wrecker` is an HTTP benchmarking library for profiling several API actions.
 
 ### Output
 
@@ -34,34 +34,19 @@ testScript port cxt rec = withSession cxt rec $ \sess -> do
   rpc sess checkout cart
 ```
 
-For this example `stub` server.
-
-```json
-{ "products"        : ["http://localhost:3000/products/0"]
-, "product/:id"     : { "summary" : "shirt" }
-, "carts"           : ["http://localhost:3000/carts/0"]
-, "carts/:id"       : { "items" : "http://localhost:3000/carts/0/items" }
-, "carts/:id/items" : []
-, "users"           : ["http://localhost:3000/users/0"]
-, "users/:id"       : { "cart"     : "http://localhost:3000/carts/0"
-                    , "username" : "example"
-                    }
-}
-```
-
 ### Memory Use
 
 `wrecker` calculates statistics incrementally and is able to use a constant amount of memory regardless of the length of time it is run.
 
-Here is a heap snapshot for a thousand concurrent connections.
+Here is a heap snapshot for a thousand concurrent connections
 
 ![Heap Snapshot](/memoryProfile.png?raw=true "Heap Snapshot")
 
 ### Running Examples
- - To run whole benchmark example `cabal run example`
- - Just the client `cabal run example-client `
- - Just the server `cabal run example-server`
+ - Run the client and server example with `cabal run example`
+ - Run the client with `cabal run example-client `
+ - Run the serve with `cabal run example-server`
 
-# How to Use `wrecker` for Our Own Benchmarks
+# How to Create Benchmarks with `wrecker`
 
-[Example client tutorial](/examples/Client.md)
+[Typed REST client tutorial](/examples/Client.md)
