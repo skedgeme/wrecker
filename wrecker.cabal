@@ -115,7 +115,7 @@ executable wreck
                      , wreq
                      , lens
   cpp-options: -D_SERVER_IS_MAIN_
-  ghc-options: -O2 -Wall -Wno-unused-do-bind -Wno-unused-top-binds -threaded -pgmL markdown-unlit -rtsopts -with-rtsopts="-N -I0 -qg"
+  ghc-options: -O2 -Wall -Wno-unused-do-bind -Wno-unused-top-binds -threaded -pgmL markdown-unlit -rtsopts "-with-rtsopts=-N -I0 -qg"
   default-language:    Haskell2010
 
 executable example-server
@@ -134,7 +134,7 @@ executable example-server
                      , wai
                      , network
   cpp-options: -D_SERVER_IS_MAIN_
-  ghc-options: -O2 -Wall -Wno-unused-do-bind -Wno-unused-top-binds -threaded -pgmL markdown-unlit -rtsopts -with-rtsopts="-N -I0 -qg"
+  ghc-options: -O2 -Wall -Wno-unused-do-bind -Wno-unused-top-binds -threaded -pgmL markdown-unlit -rtsopts "-with-rtsopts=-N -I0 -qg"
   default-language:    Haskell2010
 
 executable example-client
@@ -150,7 +150,7 @@ executable example-client
                      , http-client
                      , connection
   cpp-options: -D_CLIENT_IS_MAIN_
-  ghc-options: -O2 -Wall -Wno-unused-top-binds -Wno-unused-do-bind -threaded -pgmL markdown-unlit -rtsopts -with-rtsopts="-N -I0 -qg"
+  ghc-options: -O2 -Wall -Wno-unused-top-binds -Wno-unused-do-bind -threaded -pgmL markdown-unlit -rtsopts "-with-rtsopts=-N -I0 -qg"
   default-language:    Haskell2010
 
 executable example
@@ -173,7 +173,7 @@ executable example
                      , wai
                      , network
                      , connection
-  ghc-options: -O2 -Wall -Wno-unused-do-bind -O2 -threaded -pgmL markdown-unlit  -rtsopts -with-rtsopts="-N -I0 -qg"
+  ghc-options: -O2 -Wall -Wno-unused-do-bind -O2 -threaded -pgmL markdown-unlit  -rtsopts "-with-rtsopts=-N -I0 -qg"
   default-language:    Haskell2010
 
 test-suite wrecker-test

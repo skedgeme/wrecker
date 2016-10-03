@@ -26,10 +26,16 @@ import qualified Data.HashMap.Strict as H
 import Data.HashMap.Strict (HashMap)
 import qualified Control.Immortal as Immortal
 import qualified Network.HTTP.Client as HTTP
-import Data.Maybe 
+import Data.Maybe
+import Network.Connection (ConnectionContext)
+import qualified Network.Connection as Connection
+
 -- TODO configure whether errors are used in times or not
 
-
+data Environment = Environment
+  { recorder :: Recorder
+  , context  :: ConnectionContext
+  }
 
 {- | Typically 'wrecker' will control benchmarking actions. Howeve,r in some situations
      a benchmark might require more control.
@@ -74,11 +80,11 @@ runAction :: Logger
           -> Int
           -> Int
           -> RunType
-          -> (Recorder -> IO ())
-          -> Recorder -> IO ()
-runAction logger timeoutTime concurrency runStyle action recorder = do
+          -> (Environment -> IO ())
+          -> Environment -> IO ()
+runAction logger timeoutTime concurrency runStyle action env = do
   threadLimit <- BoundedThreadGroup.new concurrency
-  recorderRef <- newIORef recorder
+  recorderRef <- newIORef $ recorder env
 
   let takeRecorder = atomicModifyIORef' recorderRef $ \x -> (split x, x)
       actionThread = void
@@ -90,7 +96,7 @@ runAction logger timeoutTime concurrency runStyle action recorder = do
                                   -> void $ logWarn logger $ show he
                                 Nothing -> do
                                   logWarn logger $ show e
-                                  addEvent recorder $ Error
+                                  addEvent (recorder env) $ Error
                                                        { resultTime = 0
                                                        , exception  = e
                                                        , name       = "__UNKNOWN__"
@@ -98,7 +104,7 @@ runAction logger timeoutTime concurrency runStyle action recorder = do
                                   addEvent rec End
                             )
                             $ do
-                                action rec
+                                action (env { recorder = rec })
                                 addEvent rec End
 
 
@@ -120,10 +126,11 @@ runAction logger timeoutTime concurrency runStyle action recorder = do
 runWithNextVar :: Options
               -> (NextRef AllStats -> IO ())
               -> (NextRef AllStats -> IO ())
-              -> (Recorder -> IO ())
+              -> (Environment -> IO ())
               -> IO AllStats
 runWithNextVar (Options {..}) consumer final action = do
   recorder <- newRecorder 100000
+  context <- Connection.initConnectionContext
   sampler  <- newNextRef emptyAllStats
   logger   <- newStdErrLogger 100000 logLevel
   -- Collect events and
@@ -133,7 +140,8 @@ runWithNextVar (Options {..}) consumer final action = do
   consumer sampler
 
   logDebug logger "Starting Runs"
-  runAction logger timeoutTime concurrency runStyle action recorder `finally`
+  let env = Environment {..}
+  runAction logger timeoutTime concurrency runStyle action env `finally`
     (do logDebug logger "Shutting Down"
         stopRecorder recorder
         shutdownLogger 1000000 logger
@@ -146,7 +154,7 @@ runWithNextVar (Options {..}) consumer final action = do
 printLastSamples :: Options -> NextRef AllStats -> IO ()
 printLastSamples options sampler = printStats options =<< readLast sampler
 
-runNonInteractive :: Options -> (Recorder -> IO ()) -> IO AllStats
+runNonInteractive :: Options -> (Environment -> IO ()) -> IO AllStats
 runNonInteractive options action = do
   let shutdown sampler = do
         putStrLn ""
@@ -194,7 +202,7 @@ updateUI nameSize urlDisp displayContext stats
   $ lines
   $ pprStats nameSize urlDisp stats
 
-runInteractive :: Options -> (Recorder -> IO ()) -> IO AllStats
+runInteractive :: Options -> (Environment -> IO ()) -> IO AllStats
 runInteractive options action = do
   vtyConfig       <- VTY.standardIOConfig
   vty             <- VTY.mkVty vtyConfig
@@ -232,7 +240,7 @@ runInteractive options action = do
 --
 --    Like 'defaultMain', 'run' creates a 'Recorder' and passes it each
 --    benchmark.
-run :: Options -> [(String, Recorder -> IO ())] -> IO (HashMap String AllStats)
+run :: Options -> [(String, Environment -> IO ())] -> IO (HashMap String AllStats)
 run options actions = do
   hSetBuffering stderr LineBuffering
 
@@ -247,9 +255,9 @@ run options actions = do
 
 {-| Run a single benchmark
 -}
-runOne :: Options -> (Recorder -> IO ()) -> IO AllStats
-runOne options f 
+runOne :: Options -> (Environment -> IO ()) -> IO AllStats
+runOne options f
    =  let key = "key"
-   in fromMaybe (error "runOne: impossible!") 
+   in fromMaybe (error "runOne: impossible!")
    .  H.lookup key
   <$> run options [(key, f)]

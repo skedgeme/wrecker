@@ -1,5 +1,5 @@
-{-| This is a copy of the wrecker 'Session' API, 
-    'Network.Wreq.Session' which utilizes 'wrecker''s 
+{-| This is a copy of the wrecker 'Session' API,
+    'Network.Wreq.Session' which utilizes 'wrecker''s
     'record' function.
 -}
 {-# LANGUAGE CPP, RecordWildCards #-}
@@ -26,22 +26,22 @@ toHTTPConnection :: HTTP_SHIM.Connection
                  -> HTTP.Connection
 toHTTPConnection HTTP_SHIM.Connection {..} = HTTP.Connection {..}
 
-toSHIMConnection :: HTTP.Connection 
+toSHIMConnection :: HTTP.Connection
                  -> HTTP_SHIM.Connection
 toSHIMConnection HTTP.Connection {..} = HTTP_SHIM.Connection {..}
 
-convertTlsConnection :: IO (  Maybe HostAddress 
-                           -> String 
-                           -> Int 
+convertTlsConnection :: IO (  Maybe HostAddress
+                           -> String
+                           -> Int
                            -> IO HTTP_SHIM.Connection
                            )
-                     -> IO (  Maybe HostAddress 
-                           -> String 
-                           -> Int 
+                     -> IO (  Maybe HostAddress
+                           -> String
+                           -> Int
                            -> IO HTTP.Connection
                            )
 convertTlsConnection
-  = fmap (\f -> \a s i -> fmap toHTTPConnection $ f a s i) 
+  = fmap (\f -> \a s i -> fmap toHTTPConnection $ f a s i)
 
 convertTlsProxyConnection :: IO (  ByteString
                                 -> (HTTP_SHIM.Connection -> IO ())
@@ -59,20 +59,20 @@ convertTlsProxyConnection :: IO (  ByteString
                                 -> Int
                                 -> IO HTTP.Connection
                                 )
-convertTlsProxyConnection 
-  = fmap (\f 
-         -> \b g s m s' i 
-            -> fmap toHTTPConnection 
+convertTlsProxyConnection
+  = fmap (\f
+         -> \b g s m s' i
+            -> fmap toHTTPConnection
              $ f b (g . toHTTPConnection) s m s' i
-         ) 
+         )
 
 convert :: HTTP_SHIM.ManagerSettings -> HTTP.ManagerSettings
-convert HTTP_SHIM.ManagerSettings {..} = 
-  let d = HTTP.defaultManagerSettings 
+convert HTTP_SHIM.ManagerSettings {..} =
+  let d = HTTP.defaultManagerSettings
   in HTTP.ManagerSettings
       { HTTP.managerConnCount           = HTTP.managerConnCount d
       , HTTP.managerRawConnection       = HTTP.managerRawConnection d
-      , HTTP.managerTlsConnection       = convertTlsConnection 
+      , HTTP.managerTlsConnection       = convertTlsConnection
                                         $ managerTlsConnection
       , HTTP.managerTlsProxyConnection  = convertTlsProxyConnection
                                         $ managerTlsProxyConnection
@@ -83,8 +83,8 @@ convert HTTP_SHIM.ManagerSettings {..} =
       , HTTP.managerModifyRequest       = HTTP.managerModifyRequest d
       , HTTP.managerProxyInsecure       = HTTP.managerProxyInsecure d
       , HTTP.managerProxySecure         = HTTP.managerProxySecure d
-      }                              
-                          
+      }
+
 -- |
 -- Module      : Network.Wreq.Internal.Types
 -- Copyright   : (c) 2014 Bryan O'Sullivan
@@ -100,20 +100,20 @@ convert HTTP_SHIM.ManagerSettings {..} =
 -- and modified to include the wrecker recorder
 
 defaultManagerSettings :: ConnectionContext -> HTTP.ManagerSettings
-defaultManagerSettings context 
-  = convert 
+defaultManagerSettings context
+  = convert
   $ (TLS.mkManagerSettingsContext (Just context) def Nothing)
           { HTTP_SHIM.managerResponseTimeout = HTTP_SHIM.responseTimeoutNone }
--- | Create a 'Session', passing it to the given function.  The
+-- | Create a 'Session' using the 'wrecker' 'Environment', passing it to the given function.  The
 -- 'Session' will no longer be valid after that function returns.
 --
 -- This session manages cookies and uses default session manager
 -- configuration.
-withSession :: ConnectionContext -> Recorder -> (Session -> IO a) -> IO a
-withSession context recorder
-  = withSessionControl recorder
+withWreq :: Environment -> (Session -> IO a) -> IO a
+withWreq env
+  = withSessionControl (recorder env)
                        (Just (HTTP.createCookieJar []))
-                       (defaultManagerSettings context)
+                       (defaultManagerSettings (context env))
 
 -- | Create a session.
 --

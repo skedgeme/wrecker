@@ -1,6 +1,6 @@
 # Building a Profiling Client with `wrecker`
 
-`wrecker` is intended to benchmark HTTP calls inline with other forms of 
+`wrecker` is intended to benchmark HTTP calls inline with other forms of
 processing. This allows for complex the interactions necessary to benchmark
 certain API endpoints.
 
@@ -78,15 +78,14 @@ Not the drones...
 ### The Essence of `wrecker`
 
 ```haskell
-import Wrecker (defaultMain, Recorder)
+import Wrecker (defaultMain, Environment)
 ```
 
 - `defaultMain` is one of two entry points `wrecker` provides (the other is
   `run`). `defaultMain` performs command line argument parsing for us, and
   runs the benchmarks with the provided options.
-- `Recorder` is an opaque type we can call `record` with. This happens
-  automatically when using the calls in `Network.Wreq.Wrecker`. `defaultMain`
-  and `run` create a `Recorder` that is used by all the benchmark scripts.
+- `Environment` contains the necessary state to record the times of
+  requests and it has a preallocated TLS context.
 
 ```haskell
 import Data.Aeson
@@ -98,8 +97,6 @@ import Network.Wreq (Response)
 import qualified Network.Wreq as Wreq
 import Network.Wreq.Wrecker (Session)
 import qualified Network.Wreq.Wrecker as WW
-import Network.Connection (ConnectionContext)
-import qualified Network.Connection as Connection
 ```
 `wrecker` provides a wrapped version of `Network.Wreq.Session` called
 `Network.Wreq.Wrecker`. Importing is the quickest way to write a benchmark with
@@ -121,7 +118,7 @@ a quick wrapper around `wreq`, specialized to JSON.
 
 ### The Envelope
 
-We wrap all JSON sent to and from the server in the envelope. 
+We wrap all JSON sent to and from the server in the envelope.
 
 The envelope is serialized to JSON with the following format
 ```json
@@ -342,8 +339,8 @@ data Credentials = Credentials
 We can now easily write our first script!
 
 ```haskell
-testScript :: Int -> ConnectionContext -> Recorder -> IO ()
-testScript port cxt rec = WW.withSession cxt rec $ \sess -> do
+testScript :: Int -> Environment -> IO ()
+testScript port env = WW.withWreq env $ \sess -> do
 ```
 Bootstrap the script and get all the URLs for the endpoints. Unpack
 `products`, `login` and `checkout` refs for use later down.
@@ -392,11 +389,10 @@ Checkout.
 Port is hard coded to 3000 for this example.
 
 ```haskell
-benchmarks :: Int -> IO [(String, Recorder -> IO ())]
+benchmarks :: Int -> IO [(String, Environment -> IO ())]
 benchmarks port = do
   -- Create a TLS context once
-  cxt <- Connection.initConnectionContext
-  return [("test0", testScript port cxt)]
+  return [("test0", testScript port)]
 
 main :: IO ()
 main = defaultMain =<< benchmarks 3000

@@ -12,7 +12,6 @@ import Network.Wai.Handler.Warp (Port)
 import Data.Maybe (fromJust)
 import Control.Concurrent.NextRef (NextRef)
 import qualified Control.Concurrent.NextRef as NextRef
-import qualified Network.Connection as Connection
 import Debug.Trace
 
 {-
@@ -132,13 +131,12 @@ instance Approx a => Approx (Server.Root a) where
 runWrecker :: Int -> IO AllStats
 runWrecker port = do
   let key = "key"
-  cxt <- Connection.initConnectionContext
   fromJust . H.lookup key <$> Wrecker.run (defaultOptions
                                              { runStyle    = RunCount 200
                                              , displayMode = Interactive
                                              }
                                           )
-                                          [ (key, Client.testScript port cxt)
+                                          [ (key, Client.testScript port)
                                           ]
 
 calculateOverhead :: IO (Server.Root Gaussian)

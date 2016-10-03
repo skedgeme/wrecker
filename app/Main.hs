@@ -10,8 +10,8 @@ import qualified Network.Wreq as Wreq
 import Control.Lens
 
 parser :: Parser (PartialOptions, String)
-parser 
-   =  (,) 
+parser
+   =  (,)
   <$> pPartialOptions
   <*> strArgument mempty
 
@@ -30,9 +30,9 @@ runParser' = do
   return (options, url)
 
 main :: IO ()
-main = do 
+main = do
   (options, url) <- runParser'
   man <- newManager defaultManagerSettings { managerConnCount = concurrency options }
-  void $ runOne options $ \recorder -> do 
-    void $ record recorder url 
+  void $ runOne options $ \env -> do
+    void $ record (recorder env) url
          $ Wreq.getWith (Wreq.defaults & Wreq.manager .~ Right man) url

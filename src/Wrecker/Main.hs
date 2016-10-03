@@ -1,7 +1,7 @@
 module Wrecker.Main (defaultMain) where
 import Wrecker.Runner  (run)
 import Wrecker.Options (runParser)
-import Wrecker.Recorder (Recorder)
+import Wrecker.Runner (Environment)
 import Control.Monad (void)
 
 {- | 'defaultMain' is typically the main entry point for 'wrecker' benchmarks.
@@ -44,5 +44,5 @@ To see the options defaultMain can parse call `--help`
 >  --silent                 Disable all output
 
 -}
-defaultMain :: [(String, Recorder -> IO ())] -> IO ()
+defaultMain :: [(String, Environment -> IO ())] -> IO ()
 defaultMain actions = void . flip run actions =<< runParser
