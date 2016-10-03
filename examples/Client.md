@@ -370,7 +370,7 @@ Login and get the user's ref.
                            }
                         )
 ```
-Get the user and unpack the user's art.
+Get the user and unpack the user's cart.
 
 ```haskell
   User { cart } <- get sess userRef
