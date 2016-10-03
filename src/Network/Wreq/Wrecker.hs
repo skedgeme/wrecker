@@ -1,3 +1,7 @@
+{-| This is a copy of the wrecker 'Session' API, 
+    'Network.Wreq.Session' which utilizes 'wrecker''s 
+    'record' function.
+-}
 {-# LANGUAGE CPP, RecordWildCards #-}
 module Network.Wreq.Wrecker where
 import Wrecker
@@ -93,6 +97,7 @@ convert HTTP_SHIM.ManagerSettings {..} =
 -- HTTP client types.
 
 -- All of this code below was copied from bos's `Network.Wreq.Session`
+-- and modified to include the wrecker recorder
 
 defaultManagerSettings :: ConnectionContext -> HTTP.ManagerSettings
 defaultManagerSettings context 

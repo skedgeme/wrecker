@@ -7,12 +7,9 @@ description:
  are used as inputs to the next request. This is useful for complex API
  profiling situations.
 
-
- 'wrecker' does not provide any mechanism for making HTTP calls. It works
- with any HTTP client that produces a 'HttpException' during failure (so
- http-client and wreq will work out of the box).
-
-
+ 'wrecker' includes a wrapped version of the `wreq` Session API 
+ through, mainly 'Network.Wreq.Wrecker'.
+ 
  See the documentation for examples of how to use 'wrecker' with
  benchmarking scripts.
 homepage:            https://github.com/skedgeme/wrecker#readme
@@ -21,7 +18,6 @@ license-file:        LICENSE
 author:              Jonathan Fischoff
 maintainer:          jonathangfischoff@gmail.com
 copyright:           2016 skedge.me
-                     
 category:            Web
 build-type:          Simple
 -- extra-source-files:
