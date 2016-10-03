@@ -9,22 +9,26 @@ There are plenty of HTTP profilers in existence, `wrk`, `ab`, `JMeter`, etc. Mos
 
 ### Quick Start
 
+`wrecker` provides a simple executable [`wreck`](/app/Main.hs) which takes single URL to profile.
+
+```
+$ wreck http://localhost:3000/root
+```
+
+The same functionality can executed from ghci.
+
 ```bash
 $ ghci
 > import Wrecker
 > import Network.Wreq.Wrecker
-> runOne defaultOptions $ \sess -> get sess "http://localhost:3000/root"
+> runOne defaultOptions $ \rec -> withSession rec $ get sess "http://localhost:3000/root"
 ```
 
 Running with ghci is okay to get a feel for `wrecker` but it is recommend that all
 benchmarks are compiled with optimizations, the threaded library,
 and run with the RTS options `-N -I0 -qg`.
 
-`wrecker` provides a simple executable [`wreck`](/app/Main.hs) which takes single URL to profile.
 
-```
-$ wreck http://localhost:3000/root
-```
 
 In addition to benchmarking a single URL, the `wrecker` library can create
 multiple named benchmarks, each of which can contain multiple endpoints to
@@ -35,12 +39,12 @@ import Wrecker
 
 main = defaultMain
   [ ( "first page"
-    , \sess -> do
+    , \rec -> withSession rec $ \sess -> do
         get sess "http://localhost:3000/page1/page1.css"
         get sess "http://localhost:3000/page1/page1.js"
     )
   , ( "second page"
-    , \sess -> do
+    , \rec -> withSession rec $ \sess -> do
         get sess "http://localhost:3000/page2/page2.css"
         get sess "http://localhost:3000/page2/page2.js"
     )
