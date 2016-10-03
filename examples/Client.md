@@ -64,8 +64,8 @@ This is Haskell, so first we turn on the extensions we would like to use.
   can generate the JSON conversion functions for us automatically.
 - `OverloadedStrings` is a here so Redditors don't yell at me for using
   `String` instead of `Text`.
-- `DuplicateRecordFields` lets us use the `username` field in two records...
-  welcome to the future.
+- `DuplicateRecordFields` lets us use the `username` field in two records...welcome
+to the future.
 - `CPP`...ignore that...
 
 ```haskell
@@ -121,7 +121,7 @@ a quick wrapper around `wreq`, specialized to JSON.
 
 ### The Envelope
 
-We wrap all JSON in the envelope sent to and from the server. 
+We wrap all JSON sent to and from the server in the envelope. 
 
 The envelope is serialized to JSON with the following format
 ```json
