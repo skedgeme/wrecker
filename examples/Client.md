@@ -1,14 +1,14 @@
 # Building a Profiling Client with `wrecker`
 
-`wrecker` is intended to benchmark HTTP calls inline with other forms of
-processing. This allows for complex interactions necessary to benchmark
+`wrecker` is intended to benchmark HTTP calls inline with other forms of 
+processing. This allows for complex the interactions necessary to benchmark
 certain API endpoints.
 
 ## TL;DR
 
-`wrecker` let's you build elegant API clients that you can use for profiling
+`wrecker` lets you build elegant API clients that you can use for profiling.
 
-Here is the example we will build.
+Here is the the final benchmark utlizing the typed REST client we will build.
 
     testScript :: Int -> ConnectionContext -> Recorder -> IO ()
     testScript port cxt rec = withSession cxt rec $ \sess -> do
@@ -32,10 +32,10 @@ Here is the example we will build.
 If this doesn't make sense on inspection, that is okay. This file builds up all
 the necessary utilities and documents every line.
 
-Most of the code in this file is "generic". It is the type of boilerplate you
+Most of the code in this file is "generic." It is the type of boilerplate you
 make once for an API client.
 
-You don't need to make a polished typed API client to use `wrecker`,
+You don't need to make a polished typed API client to use `wrecker`;
 just look at TODO_MAKE_AESON_LENS_EXAMPLE.
 
 ## Outline
@@ -63,17 +63,17 @@ This is Haskell, so first we turn on the extensions we would like to use.
 - `DeriveAnyClass` and `DeriveGeneric` are used turned on so the compiler
   can generate the JSON conversion functions for us automatically.
 - `OverloadedStrings` is a here so redditors don't yell at me for using
-  `String` instead of `Text`
-- `DuplicateRecordFields` let's us use the `username` field in two records ...
+  `String` instead of `Text`.
+- `DuplicateRecordFields` let's us use the `username` field in two records...
   welcome to the future.
-- `CPP` ... ignore that ...
+- `CPP`...ignore that...
 
 ```haskell
 #ifndef _CLIENT_IS_MAIN_
 module Client where
 #endif
 ```
-Not the drones ...
+Not the drones...
 
 ### The Essence of `wrecker`
 
@@ -84,14 +84,14 @@ import Wrecker (defaultMain, Recorder)
 - `defaultMain` is one of two entry points `wrecker` provides (the other is
   `run`). `defaultMain` performs command line argument parsing for us, and
   runs the benchmarks with the provided options.
-- `Recorder` is an opaque type we can call `record` with. This is happens
+- `Recorder` is an opaque type we can call `record` with. This happens
   automatically when using the calls in `Network.Wreq.Wrecker`. `defaultMain`
   and `run` create a `Recorder` that is used by all the benchmark scripts.
 
 ```haskell
 import Data.Aeson
 ```
-We need JSON so of course we are using `aeson`.
+We need JSON, so of course we are using `aeson`.
 
 ```haskell
 import Network.Wreq (Response)
@@ -116,13 +116,12 @@ import Network.HTTP.Client (responseBody)
 
 ## <a name="Make_a_Somewhat_Generic_JSON_API"> Make a Somewhat Generic JSON API
 
-`wreq` is pretty easy to use for JSON APIs but it could be easier. Here we make
-a quick wrapper around `wreq` specialized to JSON
+`wreq` is pretty easy to use for JSON APIs, but it could be easier. Here we make
+a quick wrapper around `wreq`, specialized to JSON.
 
 ### The Envelope
 
-We wrap all JSON in sent to and from the server in an envelope,
-mainly so we can also serialize a json object as opposed to an array.
+We wrap all JSON in the envelope sent to and from the server. 
 
 The envelope is serialized to JSON with the following format
 ```json
@@ -135,7 +134,8 @@ data Envelope a = Envelope { value :: a }
 ```
 
 The `Envelope` only exists to transmit data between the server and the browser.
-- We wrap values going to the server in an `Envelope`
+
+- We wrap values going to the server in an `Envelope`.
 
   ```haskell
   toEnvelope :: ToJSON a => a -> Value
@@ -149,7 +149,7 @@ The `Envelope` only exists to transmit data between the server and the browser.
   fromEnvelope x = fmap (value . responseBody) . Wreq.asJSON =<< x
   ```
 
-- If we wrap inputs and unwrap outputs so we can wrap a whole function.
+- We wrap inputs and unwrap outputs so we can wrap a whole function.
 
   ```haskell
   liftEnvelope :: (ToJSON a, FromJSON b)
@@ -173,19 +173,19 @@ jsonPost sess url = liftEnvelope $ WW.post sess (T.unpack url)
 ## <a name="Make_a_Somewhat_Generic_REST_API"> Make a Somewhat Generic REST API
 
 ### Resource References
-Working with JSON is okay, but this is Haskell we would rather work with
+Working with JSON is okay, but this is Haskell so we would rather work with
 types.
 
-We represent resource urls using the type `Ref`
+We represent resource URLs using the type `Ref`.
 ```haskell
 data Ref a = Ref { unRef :: Text }
   deriving (Show, Eq)
 ```
 
 `Ref` is nothing more than a `Text` wrapper (the value there is the URL). `Ref`
-has polymorphic `a` so we can talk about different types of resources.
+has a phantom type `a`, which enables us to talk about different types of resources.
 
-A `FromJSON` instance which wraps a `Text` value, assuming the JSON is `Text`.
+`Ref a`'s `FromJSON` instance wraps a `Text` value, after scrutinizing the JSON `Value` to ensure it is `Text`.
 
 ```haskell
 instance FromJSON (Ref a) where
@@ -199,7 +199,7 @@ instance ToJSON (Ref a) where
   toJSON (Ref x) = toJSON x
 ```
 
-In addition to resources our API has ad-hoc RPC calls. RPC calls are also
+In addition to resources, our API has ad-hoc RPC calls. RPC calls are also
 represented as a URL.
 
 ### Adhoc RPC
@@ -214,11 +214,11 @@ instance FromJSON (RPC a b) where
 
 ### REST API Actions
 
-We utilize our `jsonGet` and `jsonPost` functions and make specialized versions
+We utilize our `jsonGet` and `jsonPost` functions, and make specialized versions
 for our more specific REST and RPC calls.
 
 - `get` takes a `Ref a` and returns an `a`. The `a` could be something
-  like `Cart` or it could be a list like `[Ref a]`.
+  like `Cart`, or it could be a list like `[Ref a]`.
 
   ```haskell
   get :: FromJSON a => Session -> Ref a -> IO a
@@ -226,7 +226,7 @@ for our more specific REST and RPC calls.
   ```
 
 - `insert` takes a `Ref` to a list and appends an item to it. It returns the
-  reference that you passed in because why not.
+  reference that you passed in because, why not.
 
   ```haskell
   insert :: ToJSON a => Session -> Ref [a] -> a -> IO (Ref [a])
@@ -244,14 +244,14 @@ for our more specific REST and RPC calls.
 ## <a name="The_Example_API"> The Example API
 
 The API requires an initial call to the "/root" to obtain the URLs for
-subsequent calls
+subsequent calls.
 
 ```haskell
 rootRef :: Int -> Ref Root
 rootRef port = Ref $ T.pack $ "http://localhost:" ++ show port ++ "/root"
 ```
 
-### API Response types
+### API Response Types
 
 Calling `GET` on "/root" returns the following JSON  
 
@@ -264,7 +264,7 @@ Calling `GET` on "/root" returns the following JSON
 }
 ```
 
-Which will deserialize to.
+Which will deserialize to
 
 ```haskell                                                
 data Root = Root                           
@@ -276,7 +276,7 @@ data Root = Root
   } deriving (Eq, Show, Generic, FromJSON)
 ```
 
-Since the JSON is so uniform, we can use `aeson`s generic instances.
+Since the JSON is so uniform, we can use `aeson`'s generic instances.
 
 Calling `GET` on a `Ref Product` or "/products/:id" gives
 
@@ -284,7 +284,7 @@ Calling `GET` on a `Ref Product` or "/products/:id" gives
 { "summary" : "shirt" }
 ```
 
-Which will deserialize to.
+Which will deserialize to
 
 ```haskell
 data Product = Product                     
@@ -355,11 +355,13 @@ Bootstrap the script and get all the URLs for the endpoints. Unpack
        } <- get sess (rootRef port)
 ```
 We get all products and name the first one
+
 ```haskell
   firstProduct : _ <- get sess products
 ```
 
 Login and get the user's ref.
+
 ```haskell
   userRef <- rpc sess login
                         ( Credentials
@@ -368,7 +370,8 @@ Login and get the user's ref.
                            }
                         )
 ```
-Get the user and unpack the user's cart.
+Get the user and unpack the user's art.
+
 ```haskell
   User { cart } <- get sess userRef
 ```
