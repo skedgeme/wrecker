@@ -160,7 +160,7 @@ The `Envelope` only exists to transmit data between the server and the browser.
 
 ### Hide the Envelope
 
-We hide the `Envelope` in JSON specialized `get`s and `post`s.
+We hide the `Envelope` in JSON specialized `get`'s and `post`'s.
 
 ```haskell
 jsonGet :: FromJSON a => Session -> Text -> IO a
