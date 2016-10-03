@@ -62,9 +62,9 @@ This is Haskell, so first we turn on the extensions we would like to use.
 - `NamedFieldPuns` will let us destructure records conveniently. 
 - `DeriveAnyClass` and `DeriveGeneric` are used turned on so the compiler
   can generate the JSON conversion functions for us automatically.
-- `OverloadedStrings` is a here so redditors don't yell at me for using
+- `OverloadedStrings` is a here so Redditors don't yell at me for using
   `String` instead of `Text`.
-- `DuplicateRecordFields` let's us use the `username` field in two records...
+- `DuplicateRecordFields` lets us use the `username` field in two records...
   welcome to the future.
 - `CPP`...ignore that...
 
