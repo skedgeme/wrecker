@@ -1,10 +1,10 @@
 ## Running the Examples
 
-- To run whole benchmark example `cabal run example`
-- Just the client `cabal run example-client `
-- Just the server `cabal run example-server`
+- Run the whole benchmark example with `cabal run example`
+- Run just the client with `cabal run example-client `
+- Run just the server with `cabal run example-server`
 
-Additionally the examples take the standard `wrecker` command line arguments, which can be viewed with
+Additionally, the examples take the standard `wrecker` command line arguments, which can be viewed with
 
      cabal run example -- --help
 
@@ -32,7 +32,7 @@ Available options:
   --silent                 Disable all output
 ```
 
-Below is the source for `example` which creates a client and server.
+Below is the source for `example`, which creates a client and server:
 
 ```haskell
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -54,7 +54,7 @@ import Network.Connection ( connectTo
                           )
 ```
 
-A little utility function which loops until a port is ready for connections.
+A little utility function which loops until a port is ready for connections:
 
 ```haskell
 waitFor :: Int -> IO ()
@@ -72,7 +72,7 @@ waitFor port = do
                )
 ```
 
-Entry point
+Entry point:
 
 ```haskell
 main :: IO ()
