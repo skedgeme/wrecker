@@ -60,53 +60,53 @@ library
                , Network.PublicSuffixList.Serialize
                , Network.PublicSuffixList.DataStructure
 
-  build-depends: base >= 4.7 && < 5
-               , stm
-               , stm-chans
-               , statistics
-               , vector
-               , bytestring
-               , aeson
-               , unix
+  build-depends: base                   >= 4.7 && < 5
+               , aeson                    >= 0.7.0.3
+               , ansi-terminal
                , ansigraph
-               , network
-               , time
+               , array
+               , base64-bytestring        
+               , blaze-builder
+               , bytestring               >= 0.10
+               , case-insensitive
                , clock
-               , text
+               , clock-extras
+               , connection
+               , containers
+               , cookie
+               , cryptonite
+               , data-default
+               , data-default-class
+               , deepseq
+               , exceptions
+               , filepath
                , http-client
                , http-types
-               , tabular
-               , deepseq
-               , unordered-containers
-               , threads
-               , vty
-               , threads-extras
-               , clock-extras
-               , optparse-applicative
-               , ansi-terminal
-               , unagi-chan
-               , next-ref
                , immortal
-               , wreq
-               , connection
-               , data-default
-               , network-uri
-               , blaze-builder
-               , containers
-               , streaming-commons
-               , case-insensitive
-               , base64-bytestring
-               , exceptions
-               , cookie
-               , data-default-class
-               , tls
-               , cryptonite
                , memory
                , mime-types
-               , transformers
-               , filepath
+               , network
+               , network-uri
+               , next-ref
+               , optparse-applicative
                , random
-               , array
+               , statistics
+               , stm
+               , stm-chans
+               , streaming-commons
+               , tabular
+               , text
+               , threads
+               , threads-extras
+               , time
+               , tls
+               , transformers
+               , unagi-chan
+               , unix
+               , unordered-containers
+               , vector
+               , vty
+               , wreq
   default-language:    Haskell2010
   ghc-options:         -Wall -fno-warn-unused-do-bind -pgmL markdown-unlit
 
