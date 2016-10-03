@@ -3,7 +3,7 @@
 
 ### Why?
 
-There are plenty of HTTP profilers in existence, `wrk`, `ab`, `JMeter`, etc. Most profilers provide some facility for scripting and using the responses of the previous requests. However, the scripting facility is usual weak and difficult to use.
+There are plenty of HTTP profilers in existence, `wrk`, `ab`, `JMeter`, etc. Most profilers provide some facility for scripting and using the responses of the previous requests. However, the scripting facility is usually weak and difficult to use.
 
 `wreck` is designed from the ground up for scripting complex API interactions. Benchmarks are built using `wreq`, along with the full benefits of using Haskell.
 
@@ -20,7 +20,7 @@ Running with ghci is okay to get a feel for `wrecker` but it is recommend that a
 benchmarks are compiled with optimizations, the threaded library,
 and run with the RTS options `-N -I0 -qg`.
 
-`wrecker` provides a simple executable `wreck` which takes single URL to profile.
+`wrecker` provides a simple executable [`wreck`](/app/Main.hs) which takes single URL to profile.
 
 ```
 $ wreck http://localhost:3000/root
