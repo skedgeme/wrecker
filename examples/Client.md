@@ -354,7 +354,7 @@ Bootstrap the script and get all the URLs for the endpoints. Unpack
        , checkout
        } <- get sess (rootRef port)
 ```
-We get all products and name the first one
+We get all products and name the first one.
 
 ```haskell
   firstProduct : _ <- get sess products
@@ -375,7 +375,7 @@ Get the user and unpack the user's art.
 ```haskell
   User { cart } <- get sess userRef
 ```
-Get the cart unpack the items.
+Get the cart and unpack the items.
 ```haskell
   Cart { items } <- get sess cart
 ```
@@ -388,7 +388,7 @@ Checkout.
   rpc sess checkout cart
 ```
 
-Port is hard coded to 3000 for this example
+Port is hard coded to 3000 for this example.
 
 ```haskell
 benchmarks :: Int -> IO [(String, Recorder -> IO ())]
