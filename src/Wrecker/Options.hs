@@ -78,7 +78,7 @@ data PartialOptions = PartialOptions
   , mRequestNameColumnSize :: Maybe Int
   , mOutputFilePath        :: Maybe FilePath
   , mSilent                :: Maybe Bool
-  , murlDisplay              :: Maybe URLDisplay
+  , murlDisplay            :: Maybe URLDisplay
   } deriving (Show, Eq)
 
 instance Monoid PartialOptions where
@@ -108,7 +108,7 @@ instance Monoid PartialOptions where
                   , mOutputFilePath        =  mOutputFilePath x
                                           <|> mOutputFilePath y
                   , mSilent                =  mSilent      x <|> mSilent      y
-                  , murlDisplay              =  murlDisplay    x <|> murlDisplay    y
+                  , murlDisplay            =  murlDisplay  x <|> murlDisplay  y
                   }
 
 completeOptions :: PartialOptions -> Maybe Options
@@ -231,3 +231,6 @@ runParser = do
   case completeOptions partialOptions of
     Nothing -> throwIO $ userError ""
     Just x  -> return x
+
+
+

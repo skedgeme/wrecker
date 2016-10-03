@@ -369,6 +369,7 @@ Login and get the user's ref.
                            , password = "password"
                            }
                         )
+
 ```
 Get the user and unpack the user's cart.
 

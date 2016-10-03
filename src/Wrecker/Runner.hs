@@ -25,8 +25,11 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.HashMap.Strict as H
 import Data.HashMap.Strict (HashMap)
 import qualified Control.Immortal as Immortal
-import qualified Network.HTTP.Client_0_5_3_2_SHIM as HTTP
+import qualified Network.HTTP.Client as HTTP
+import Data.Maybe 
 -- TODO configure whether errors are used in times or not
+
+
 
 {- | Typically 'wrecker' will control benchmarking actions. Howeve,r in some situations
      a benchmark might require more control.
@@ -101,7 +104,7 @@ runAction logger timeoutTime concurrency runStyle action recorder = do
 
   case runStyle of
     RunCount count -> replicateM_ (count * concurrency) actionThread
-    RunTimed time  -> void $ timeout time $ forever actionThread
+    RunTimed time  -> void $ timeout (time * 1000000) $ forever actionThread
 
   mtimeout <- timeout timeoutTime $ BoundedThreadGroup.wait threadLimit
   case mtimeout of
@@ -172,6 +175,7 @@ printLoop options context vty sampler
                  context
                  allStats
         VTY.refresh vty
+        threadDelay 100000
         next
 
 processInputForCtrlC :: TChan VTY.Event -> IO ThreadId
@@ -240,3 +244,12 @@ run options actions = do
         Interactive    -> runInteractive    options action
     else
       return (groupName, emptyAllStats)
+
+{-| Run a single benchmark
+-}
+runOne :: Options -> (Recorder -> IO ()) -> IO AllStats
+runOne options f 
+   =  let key = "key"
+   in fromMaybe (error "runOne: impossible!") 
+   .  H.lookup key
+  <$> run options [(key, f)]

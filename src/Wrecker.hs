@@ -1,14 +1,11 @@
-{-| 'wrecker' is a library for creating HTTP benchmarks. It is designed for
-    benchmarking a series of HTTP request were the output of previous requests
-    are used as inputs to the next request. This is useful for complex API
-    profiling situations.
+{-| 'wrecker' is a library and executable for creating HTTP benchmarks. It is designed for
+benchmarking a series of dependent requests. 
 
-    'wrecker' does not provide any mechanism for making HTTP calls. It works
-    with any HTTP client that produces a 'HttpException' during failure (so
-    http-client and wreq will work out of the box).
+'wrecker' includes a wrapped version of the `wreq` Session API 
+, mainly through 'Network.Wreq.Wrecker'.
 
-    See the documentation for examples of how to use 'wrecker' with
-    benchmarking scripts.
+import 'Network.Wreq.Wrecker' to write clients and 'Wrecker' to run the 
+them with either 'defaultMain' ir 'run'. 
 -}
 module Wrecker ( Recorder
                , defaultMain
@@ -23,6 +20,7 @@ module Wrecker ( Recorder
                , AllStats         (..)
                , ResultStatistics (..)
                , newStandaloneRecorder
+               , runOne
                ) where
 import Wrecker.Recorder
 import Wrecker.Main

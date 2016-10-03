@@ -1,17 +1,14 @@
 name:                wrecker
 version:             0.1.2.0
-synopsis:            A HTTP Performance Benchmarker
+synopsis:            An HTTP Performance Benchmarker
 description:
- 'wrecker' is a library for creating HTTP benchmarks. It is designed for
- benchmarking a series of HTTP request were the output of previous requests
- are used as inputs to the next request. This is useful for complex API
- profiling situations.
+ 'wrecker' is a library and executable for creating HTTP benchmarks. It is designed for
+ benchmarking a series of dependent requests. 
 
  'wrecker' includes a wrapped version of the `wreq` Session API 
- through, mainly 'Network.Wreq.Wrecker'.
+ , mainly through 'Network.Wreq.Wrecker'.
  
- See the documentation for examples of how to use 'wrecker' with
- benchmarking scripts.
+ See the documentation of 'Wrecker' for more info.
 homepage:            https://github.com/skedgeme/wrecker#readme
 license:             BSD3
 license-file:        LICENSE
@@ -106,6 +103,20 @@ library
                , wreq                   >= 0.4.1
   default-language:    Haskell2010
   ghc-options:         -Wall -fno-warn-unused-do-bind -pgmL markdown-unlit
+
+executable wreck
+  hs-source-dirs:      app
+  main-is:             Main.hs
+  build-depends:       base
+                     , wrecker
+                     , markdown-unlit
+                     , optparse-applicative
+                     , http-client
+                     , wreq
+                     , lens
+  cpp-options: -D_SERVER_IS_MAIN_
+  ghc-options: -O2 -Wall -Wno-unused-do-bind -Wno-unused-top-binds -threaded -pgmL markdown-unlit -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
 
 executable example-server
   hs-source-dirs:      examples

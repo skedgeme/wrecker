@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards, ScopedTypeVariables #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving, DeriveGeneric  #-}
-{-# LANGUAGE DeriveAnyClass, CPP #-}
+{-# LANGUAGE DeriveAnyClass, CPP, BangPatterns #-}
 module Wrecker.Recorder where
 import           Control.Concurrent.STM
 import           Control.Concurrent.STM.TBMQueue
@@ -100,8 +100,9 @@ record recorder key action = do
       recordAction = do
         r       <- action
         endTime <- getTime Monotonic
+        let !elapsedTime' = diffSeconds endTime startTime
         addEvent recorder $ Success
-                            { resultTime = diffSeconds endTime startTime
+                            { resultTime = elapsedTime'
                             , name       = key
                             }
         return r
