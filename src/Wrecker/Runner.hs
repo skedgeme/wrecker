@@ -32,9 +32,13 @@ import qualified Network.Connection as Connection
 
 -- TODO configure whether errors are used in times or not
 
+-- | The 'Environment' holds state necessary to make and record HTTP calls.
 data Environment = Environment
   { recorder :: Recorder
+  -- ^ The 'Recorder' can be used with the 'record' function to ... record times.
   , context  :: ConnectionContext
+  -- ^ Provided as a convience, this is a shared TLS context to reuse for
+  --   better performance.
   }
 
 {- | Typically 'wrecker' will control benchmarking actions. Howeve,r in some situations

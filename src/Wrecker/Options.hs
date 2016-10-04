@@ -7,8 +7,10 @@ import Wrecker.Logger
 import Data.Monoid
 
 {- | There are two typical ways to invoke 'wrecker'. 'RunCount' will execute
-     each a script 'n' times, where 'n' is the parameter for 'RunCount'.
-     Alternatively, 'wrecker' can run for specified time with 'RunTimed'.
+     each a script 'n' times on each thread. So a run count of 100 and a
+     concurrency of 10 will run the script a total of 1000 times.
+     Alternatively, 'wrecker' can run for specified number of seconds
+     with 'RunTimed'.
 -}
 data RunType = RunCount Int | RunTimed Int
   deriving (Show, Eq)
