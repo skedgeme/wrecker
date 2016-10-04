@@ -133,6 +133,7 @@ runWrecker port = do
   let key = "key"
   fromJust . H.lookup key <$> Wrecker.run (defaultOptions
                                              { runStyle    = RunCount 200
+                                             , concurrency = 1
                                              , displayMode = Interactive
                                              }
                                           )

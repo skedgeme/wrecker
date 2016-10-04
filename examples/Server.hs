@@ -36,6 +36,7 @@ import qualified Web.Scotty as Scotty
 import qualified Data.Text as T
 import Data.Monoid
 import Wrecker
+import Wrecker.Runner
 import Control.Concurrent.NextRef (NextRef)
 import qualified Control.Concurrent.NextRef as NextRef
 import qualified Control.Immortal as Immortal
