@@ -1,5 +1,5 @@
 name:                wrecker
-version:             0.1.2.0
+version:             0.1.3.0
 synopsis:            An HTTP Performance Benchmarker
 description:
  'wrecker' is a library and executable for creating HTTP benchmarks. It is designed for
@@ -8,7 +8,7 @@ description:
  'wrecker' includes a wrapped version of the `wreq` Session API
  , mainly through 'Network.Wreq.Wrecker'.
 
- See the documentation of 'Wrecker' for more info.
+ See https://github.com/skedgeme/wrecker#readme for more information.
 homepage:            https://github.com/skedgeme/wrecker#readme
 license:             BSD3
 license-file:        LICENSE

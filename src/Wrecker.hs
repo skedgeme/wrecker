@@ -6,6 +6,8 @@ benchmarking a series of dependent requests.
 
 import 'Network.Wreq.Wrecker' to write clients and 'Wrecker' to run the
 them with either 'defaultMain' ir 'run'.
+
+See https://github.com/skedgeme/wrecker#readme for more information.
 -}
 module Wrecker (-- * Entry Points
                  defaultMain
