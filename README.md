@@ -21,7 +21,7 @@ The same functionality can executed from ghci, listed below is a similar one lin
 $ ghci
 > import Wrecker
 > import Network.Wreq.Wrecker
-> runOne defaultOptions $ \env -> withWreq env $ get sess "http://localhost:3000/root"
+> runOne defaultOptions $ withWreq $ \sess -> get sess "http://localhost:3000/root"
 ```
 
 Running with ghci is okay to get a feel for `wrecker` but it is recommended that all benchmarks are compiled with optimizations, the threaded library,
@@ -39,12 +39,12 @@ import Network.Wreq.Wrecker
 
 main = defaultMain
   [ ( "first page"
-    , \env -> withWreq env $ \sess -> do
+    , withWreq $ \sess do
         get sess "http://localhost:3000/page1/page1.css"
         get sess "http://localhost:3000/page1/page1.js"
     )
   , ( "second page"
-    , \env -> withWreq env $ \sess -> do
+    , withWreq $ \sess do
         get sess "http://localhost:3000/page2/page2.css"
         get sess "http://localhost:3000/page2/page2.js"
     )
@@ -70,7 +70,7 @@ Here is what a typed API client looks like.
 
 ```haskell
 testScript :: Int -> Environment -> IO ()
-testScript port env = withWreq env $ \sess -> do
+testScript port = withWreq $ \sess -> do
   Root { products
        , login
        , checkout

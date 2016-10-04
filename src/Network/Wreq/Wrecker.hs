@@ -1,9 +1,36 @@
 {-| This is a copy of the wrecker 'Session' API,
     'Network.Wreq.Session' which utilizes 'wrecker''s
     'record' function.
+
+    This file was initially copied from Network.Wreq.Session
+    (c) 2014 Bryan O'Sullivan. See the source for the full copy right info.
 -}
+
+-- All of this code below was copied from bos's `Network.Wreq.Session`
+-- and modified to include the wrecker recorder
 {-# LANGUAGE CPP, RecordWildCards #-}
-module Network.Wreq.Wrecker where
+module Network.Wreq.Wrecker
+  ( Session
+  , defaultManagerSettings
+  -- * Session Creation
+  , withWreq
+  , withWreqNoCookies
+  , withWreqSettings
+  -- * HTTP Methods
+  , get
+  , post
+  , head_
+  , options
+  , put
+  , delete
+  -- * HTTP Methods with Options
+  , getWith
+  , postWith
+  , headWith
+  , optionsWith
+  , putWith
+  , deleteWith
+  ) where
 import Wrecker
 import qualified Network.Wreq.Session as Session
 import Network.Connection (ConnectionContext)
@@ -17,6 +44,9 @@ import Data.Default (def)
 import Data.ByteString (ByteString)
 import Network.Socket
 
+{-| An opaque type created by 'withWreq', 'withWreqNoCookies',
+    or 'withWreqSettings'. All HTTP calls require a 'Session'.
+-}
 data Session = Session
   { sSession  :: Session.Session
   , sRecorder :: Recorder
@@ -25,10 +55,6 @@ data Session = Session
 toHTTPConnection :: HTTP_SHIM.Connection
                  -> HTTP.Connection
 toHTTPConnection HTTP_SHIM.Connection {..} = HTTP.Connection {..}
-
-toSHIMConnection :: HTTP.Connection
-                 -> HTTP_SHIM.Connection
-toSHIMConnection HTTP.Connection {..} = HTTP_SHIM.Connection {..}
 
 convertTlsConnection :: IO (  Maybe HostAddress
                            -> String
@@ -85,55 +111,49 @@ convert HTTP_SHIM.ManagerSettings {..} =
       , HTTP.managerProxySecure         = HTTP.managerProxySecure d
       }
 
--- |
--- Module      : Network.Wreq.Internal.Types
--- Copyright   : (c) 2014 Bryan O'Sullivan
---
--- License     : BSD-style
--- Maintainer  : bos@serpentine.com
--- Stability   : experimental
--- Portability : GHC
---
--- HTTP client types.
 
--- All of this code below was copied from bos's `Network.Wreq.Session`
--- and modified to include the wrecker recorder
 
+{- | Create 'ManagerSettings' with no timeout using a shared TLS
+     'ConnectionContext'
+-}
 defaultManagerSettings :: ConnectionContext -> HTTP.ManagerSettings
 defaultManagerSettings context
   = convert
   $ (TLS.mkManagerSettingsContext (Just context) def Nothing)
           { HTTP_SHIM.managerResponseTimeout = HTTP_SHIM.responseTimeoutNone }
--- | Create a 'Session' using the 'wrecker' 'Environment', passing it to the given function.  The
--- 'Session' will no longer be valid after that function returns.
+-- | Create a 'Session' using the 'wrecker' 'Environment', passing it to the
+--   given function.  The 'Session' will no longer be valid after that
+--   function returns.
 --
 -- This session manages cookies and uses default session manager
 -- configuration.
-withWreq :: Environment -> (Session -> IO a) -> IO a
-withWreq env
-  = withSessionControl (recorder env)
-                       (Just (HTTP.createCookieJar []))
-                       (defaultManagerSettings (context env))
+withWreq :: (Session -> IO a) -> Environment -> IO a
+withWreq f env
+  = withWreqSettings (recorder env)
+                     (Just (HTTP.createCookieJar []))
+                     (defaultManagerSettings (context env))
+                     f
 
 -- | Create a session.
 --
 -- This uses the default session manager settings, but does not manage
 -- cookies.  It is intended for use with REST-like HTTP-based APIs,
 -- which typically do not use cookies.
-withAPISession :: ConnectionContext -> Recorder -> (Session -> IO a) -> IO a
-withAPISession context recorder
-  = withSessionControl recorder
-                       Nothing
-                       (defaultManagerSettings context)
+withWreqNoCookies :: (Session -> IO a) -> Environment -> IO a
+withWreqNoCookies f env
+  = withWreqSettings (recorder env)
+                     Nothing
+                     (defaultManagerSettings (context env))
+                     f
 
 -- | Create a session, using the given cookie jar and manager settings.
-withSessionControl :: Recorder
-                   -> Maybe HTTP.CookieJar
-                   -- ^ If 'Nothing' is specified, no cookie management
-                   -- will be performed.
-                   -> HTTP.ManagerSettings
-                   -> (Session -> IO a) -> IO a
-withSessionControl recorder cookie settings f
+withWreqSettings :: Recorder
+                 -> Maybe HTTP.CookieJar
+                 -- ^ If 'Nothing' is specified, no cookie management
+                 -- will be performed.
+                 -> HTTP.ManagerSettings
+                 -> (Session -> IO a) -> IO a
+withWreqSettings recorder cookie settings f
   = Session.withSessionControl cookie settings
   $ \session -> f (Session session recorder)
 

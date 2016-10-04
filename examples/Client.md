@@ -340,7 +340,7 @@ We can now easily write our first script!
 
 ```haskell
 testScript :: Int -> Environment -> IO ()
-testScript port env = WW.withWreq env $ \sess -> do
+testScript port = WW.withWreq $ \sess -> do
 ```
 Bootstrap the script and get all the URLs for the endpoints. Unpack
 `products`, `login` and `checkout` refs for use later down.
