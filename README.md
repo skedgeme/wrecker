@@ -1,3 +1,7 @@
+[![Hackage](https://img.shields.io/hackage/v/wrecker.svg)](https://hackage.haskell.org/package/wrecker)
+[![Travis CI Status](https://travis-ci.org/skedgeme/wrecker.svg?branch=master)](http://travis-ci.org/skedgeme/wrecker)
+
+
 ### `wrecker`
 `wrecker` is an HTTP benchmarking library and executable for profiling several API actions.
 
