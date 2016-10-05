@@ -88,7 +88,7 @@ The `100000` is the `threadDelay` for the requests in microseconds.
 ### A More Complicated Benchmark
 
 In addition to benchmarking a single URL, the `wrecker` library can create
-multiple named benchmarks, each of which can contain multiple endpoints to
+a suite of benchmarks, each of which can contain multiple endpoints to
 profile.
 
 The example below uses the `wrecker`'s `wreq` interface but any `http-client`
