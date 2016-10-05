@@ -5,6 +5,7 @@ import Options.Applicative.Builder
 import Options.Applicative
 import Control.Exception
 import Control.Monad (void)
+import Data.Monoid
 
 parser :: Parser (PartialOptions, String)
 parser
