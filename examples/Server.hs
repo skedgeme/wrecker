@@ -1,20 +1,8 @@
-{-# LANGUAGE ScopedTypeVariables
-           , TypeOperators
-           , OverloadedStrings
-           , DeriveGeneric
-           , FlexibleInstances
-           , QuasiQuotes
-           , DeriveAnyClass
-           , CPP
-           , FlexibleContexts
-           , UndecidableInstances
-           , RecordWildCards
-           , DeriveFunctor
-           , LambdaCase
-           , RecursiveDo
-           , OverloadedStrings
-           , TupleSections
-#-}
+{-# LANGUAGE ScopedTypeVariables, TypeOperators, OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric, FlexibleInstances, QuasiQuotes #-}
+{-# LANGUAGE CPP, FlexibleContexts, UndecidableInstances, RecordWildCards #-}
+{-# LANGUAGE DeriveFunctor, LambdaCase, OverloadedStrings #-}
+{-# LANGUAGE TupleSections, GeneralizedNewtypeDeriving #-}
 
 #ifndef _SERVER_IS_MAIN_
 module Server where

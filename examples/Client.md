@@ -50,13 +50,7 @@ just look at TODO_MAKE_AESON_LENS_EXAMPLE.
 This is Haskell, so first we turn on the extensions we would like to use.
 
 ```haskell
-{-# LANGUAGE NamedFieldPuns
-           , DeriveAnyClass
-           , DeriveGeneric
-           , OverloadedStrings
-           , DuplicateRecordFields
-           , CPP
-#-}
+{-# LANGUAGE NamedFieldPuns, DeriveGeneric, OverloadedStrings, CPP #-}
 ```
 
 - `NamedFieldPuns` will let us destructure records conveniently. 
@@ -64,8 +58,6 @@ This is Haskell, so first we turn on the extensions we would like to use.
   can generate the JSON conversion functions for us automatically.
 - `OverloadedStrings` is a here so Redditors don't yell at me for using
   `String` instead of `Text`.
-- `DuplicateRecordFields` lets us use the `username` field in two records...welcome
-to the future.
 - `CPP`...ignore that...
 
 ```haskell
@@ -106,7 +98,6 @@ import qualified Network.Wreq.Wrecker as WW
 ```haskell
 import GHC.Generics
 import Data.ByteString.Lazy (ByteString)
-import Data.Text (Text)
 import Data.Text as T
 import Network.HTTP.Client (responseBody)
 ```
@@ -127,7 +118,10 @@ The envelope is serialized to JSON with the following format
 It is represented in Haskell as
 ```haskell
 data Envelope a = Envelope { value :: a }
-  deriving (Show, Eq, Generic, FromJSON, ToJSON)
+  deriving (Show, Eq, Generic)
+
+instance FromJSON a => FromJSON (Envelope a)
+instance ToJSON a => ToJSON (Envelope a)
 ```
 
 The `Envelope` only exists to transmit data between the server and the browser.
@@ -270,7 +264,9 @@ data Root = Root
   , users    :: Ref [Ref User   ]          
   , login    :: RPC Credentials (Ref User)
   , checkout :: RPC (Ref Cart)  ()         
-  } deriving (Eq, Show, Generic, FromJSON)
+  } deriving (Eq, Show, Generic)
+
+instance FromJSON Root
 ```
 
 Since the JSON is so uniform, we can use `aeson`'s generic instances.
@@ -286,7 +282,9 @@ Which will deserialize to
 ```haskell
 data Product = Product                     
   { summary :: Text                        
-  } deriving (Eq, Show, Generic, FromJSON)
+  } deriving (Eq, Show, Generic)
+
+instance FromJSON Product
 ```
 
 Calling `GET` on a `Ref Cart` or "/carts/:id" gives
@@ -300,7 +298,9 @@ Calling `GET` on a `Ref Cart` or "/carts/:id" gives
 ```haskell
 data Cart = Cart                           
   { items :: Ref [Ref Product]             
-  } deriving (Eq, Show, Generic, FromJSON)
+  } deriving (Eq, Show, Generic)
+
+instance FromJSON Cart
 ```
 Calling `GET` on a `Ref User` or "/users/:id" gives
 
@@ -314,7 +314,9 @@ Calling `GET` on a `Ref User` or "/users/:id" gives
 data User = User                           
   { cart     :: Ref Cart                   
   , username :: Text                       
-  } deriving (Eq, Show, Generic, FromJSON)
+  } deriving (Eq, Show, Generic)
+
+instance FromJSON User
 ```
 
 ## RPC Types
@@ -323,15 +325,17 @@ The only additional type that we need is the input for the `login` RPC, mainly t
 
 ```json
 { "password" : "password"
-, "username" : "a@example.com"
+, "userid"   : "a@example.com"
 }
 ```
 
 ```haskell
 data Credentials = Credentials             
   { password :: Text                       
-  , username :: Text                       
-  } deriving (Eq, Show, Generic, ToJSON)   
+  , userid   :: Text                       
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON Credentials
 ```
 
 ## <a name="Profiling_Script"> Profiling Script
@@ -362,7 +366,7 @@ Login and get the user's ref.
 ```haskell
   userRef <- rpc sess login
                         ( Credentials
-                           { username = "a@example.com"
+                           { userid   = "a@example.com"
                            , password = "password"
                            }
                         )

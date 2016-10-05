@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards, ScopedTypeVariables #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving, DeriveGeneric  #-}
-{-# LANGUAGE DeriveAnyClass, CPP, BangPatterns #-}
+{-# LANGUAGE CPP, BangPatterns #-}
 module Wrecker.Recorder where
 import           Control.Concurrent.STM
 import           Control.Concurrent.STM.TBMQueue
@@ -9,6 +9,9 @@ import qualified Network.HTTP.Types as HTTP
 import           System.Clock
 import           Control.Exception
 import           System.Clock.TimeIt
+#if !MIN_VERSION_base(4,8,0)
+import Control.Applicative
+#endif
 
 data RunResult
   = Success      { resultTime :: !Double
@@ -58,7 +61,7 @@ readEvent = atomically . readTBMQueue . rQueue
 {- | 'record' is a low level function for collecting timing information.
      Wrap each action of interest in a call to record.
 
-> record recorder $ threadDelay 1000000 
+> record recorder $ threadDelay 1000000
 
   'record' measures the elapsed time of the call, and catches
   'HttpException' in the case of failure. This means failures

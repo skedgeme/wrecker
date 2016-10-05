@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards, ScopedTypeVariables, LambdaCase, BangPatterns  #-}
-{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TupleSections, CPP #-}
 module Wrecker.Runner where
 import Wrecker.Logger
 import System.Posix.Signals
@@ -29,6 +29,9 @@ import qualified Network.HTTP.Client as HTTP
 import Data.Maybe
 import Network.Connection (ConnectionContext)
 import qualified Network.Connection as Connection
+#if !MIN_VERSION_base(4,8,0)
+import Control.Applicative
+#endif
 
 -- TODO configure whether errors are used in times or not
 
