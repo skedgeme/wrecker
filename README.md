@@ -7,9 +7,9 @@
 
 ### Why?
 
-There are plenty of HTTP profilers in existence, `wrk`, `ab`, `JMeter`, `LoadRunner`, etc. Most profilers provide some facility for scripting and using the responses of the previous requests for future requests. However, the scripting facility is usually weak and esoteric.
+There are plenty of HTTP profilers in existence: `wrk`, `ab`, `JMeter`, `LoadRunner`, etc. Most profilers provide some facility for scripting and using the responses of the previous requests for future requests. However, the scripting facility is usually weak and esoteric.
 
-`wrecker` is designed from the ground up for scripting complex API sequences sublimely. Benchmarks can utilize a `wreq` like interface, perhaps the easiest to use Haskell library for HTTP interaction, and quickly create wonderful typed API clients.
+`wrecker` is designed from the ground-up for scripting complex API sequences sublimely. Benchmarks can utilize a `wreq`-like interface, perhaps the easiest-to-use Haskell library for HTTP interaction, and quickly create wonderful, typed API clients.
 
 #### How does it compare to my current http profiling?
 
@@ -22,7 +22,7 @@ That makes it a little easier to know when to stop.
 
 ### Quick Start
 
-`wrecker` provides a simple executable [`wreck`](/app/Main.hs) which takes single URL to profile.
+`wrecker` provides a simple executable [`wreck`](/app/Main.hs) which takes a single URL to profile.
 
 ```
 $ wreck http://localhost:3000/root
@@ -42,17 +42,17 @@ $ ghci
 > runOne defaultOptions $ withWreq $ \sess -> get sess "http://localhost:3000/root"
 ```
 
-Running with ghci is okay to get a feel for `wrecker` but it is recommended
+Running with ghci is okay to get a feel for `wrecker`, but it is recommended
 that all benchmarks are compiled with optimizations, the threaded library,
 and run with the RTS options `-N -I0 -qg`.
 
 #### Accuracy
 
 `wreck` produces results that are close to `wrk` and `ab` when the number of
-connections are below 100. As the number of connections increases to 1000 and
-10000 `wrk` continue to work well, but `wrecker` and `ab` produce inflated numbers.
+connections are below 100. As the number of connections increases to 1,000 and
+10,000 `wrk` continues to work well, but `wrecker` and `ab` produce inflated numbers.
 
-You can play around with comparing `wreck` to `wrk` and `ab` in vm with the provide Vagrant file.
+You can play around with comparing `wreck` to `wrk` and `ab` in the VM created from the provided Vagrant file.
 
 ```bash
 vagrant up && vagrant ssh
@@ -72,7 +72,6 @@ The `100000` is the `threadDelay` for the requests in microseconds.
    - `wreck --concurrency=100 --run-timed=10 http://localhost:3000/root`
      - mean: 105.6 ms
      - variance: 000.17 ms
-##### Example Results 100 Connections
  - 1000 Connections
    - `wrk -d 10 -t 2 -c 100 http://localhost:3000/root`
      - mean: 135.42 ms
