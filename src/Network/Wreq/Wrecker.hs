@@ -1,6 +1,5 @@
-{-| This is a copy of the wrecker 'Session' API,
-    'Network.Wreq.Session' which utilizes 'wrecker''s
-    'record' function.
+{-| This is a copy of the 'wreq' 'Session', but each call is wrapped in
+    'wrecker''s 'record' function.
 
     This file was initially copied from Network.Wreq.Session
     (c) 2014 Bryan O'Sullivan. See the source for the full copy right info.

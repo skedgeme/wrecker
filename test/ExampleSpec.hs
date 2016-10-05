@@ -12,7 +12,7 @@ import Network.Wai.Handler.Warp (Port)
 import Data.Maybe (fromJust)
 import Control.Concurrent.NextRef (NextRef)
 import qualified Control.Concurrent.NextRef as NextRef
-import Debug.Trace
+import Control.Applicative
 
 {-
   This file tests how well `wrecker` can detect a "signal".
@@ -72,7 +72,7 @@ urlStatsToDist stats =
                                         )
                       )
                 $ H.toList stats
-      Just root            = lookup "/root"          $ trace (show $ map fst gaussians) $ gaussians
+      Just root            = lookup "/root"          gaussians
       Just products        = lookup "/products"      gaussians
       Just login           = lookup "/login"         gaussians
       Just usersIndex      = lookup "/users/0"       gaussians
