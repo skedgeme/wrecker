@@ -34,6 +34,6 @@ main = do
                                            , managerIdleConnectionCount = concurrency options
                                            }
 
-  req <- parseUrl url
+  req <- parseRequest url
   void $ runOne options $ \env ->
     void $ record (recorder env) url $ httpLbs req man

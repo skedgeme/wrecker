@@ -36,9 +36,12 @@ import qualified Network.Socket as N
 import Control.Exception
 import Data.Maybe (listToMaybe)
 import System.Environment
+import Control.Applicative
 
-newtype Envelope a = Envelope { value :: a }
-  deriving (Show, Eq, Generic, ToJSON)
+data Envelope a = Envelope { value :: a }
+  deriving (Show, Eq, Generic)
+
+instance ToJSON a => ToJSON (Envelope a)
 
 rootRef :: Int -> Text
 rootRef port = T.pack $ "http://localhost:" ++ show port

@@ -121,7 +121,7 @@ data Envelope a = Envelope { value :: a }
   deriving (Show, Eq, Generic)
 
 instance FromJSON a => FromJSON (Envelope a)
-instance ToJSON a => ToJSON (Envelope a)
+instance ToJSON a => ToJSON (Envelope a) 
 ```
 
 The `Envelope` only exists to transmit data between the server and the browser.

@@ -53,6 +53,7 @@ import Network.Connection ( connectTo
                           , ConnectionParams (..)
                           , initConnectionContext
                           )
+import System.Environment
 ```
 
 A little utility function which loops until a port is ready for connections:
@@ -79,7 +80,7 @@ Entry point:
 main :: IO ()
 main = do
  -- Start the server on it's own thread
- forkIO $ Server.main
+ forkIO $ withArgs [] Server.main
 
  -- The examples use port 3000 by default
  let port = 3000
