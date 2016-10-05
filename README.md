@@ -32,7 +32,10 @@ $ wreck http://localhost:3000/root
 
 ![wreck terminal output](/wreck-example.gif?raw=true "wreck Terminal Output")
 
-Similar functionality can executed from ghci:
+The `wreck` executable is not that interesting. `wrecker` is more interesting
+when used as a library to create a suite of benchmarks.
+
+Similar functionality to `wreck` can be executed from ghci:
 
 ```bash
 $ ghci
