@@ -11,11 +11,9 @@ There are plenty of HTTP profilers in existence, `wrk`, `ab`, `JMeter`, `LoadRun
 
 `wrecker` is designed from the ground up for scripting complex API sequences sublimely. Benchmarks can utilize a `wreq` like interface, perhaps the easiest to use Haskell library for HTTP interaction, and quickly create wonderful typed API clients.
 
-`wrecker` is designed to seem comfortable and easy to use for current Haskellers. However, it is my hope that those who are struggling with scripting `LoadRunner` will find learning Haskell worth the effort because `wrecker` is that much easier. Here's hoping.
-
 #### How does it compare to my current http profiling?
 
-If you are happy with your HTTP profiling setup, then `wreck` doesn't offer
+If you are happy with your HTTP profiling setup, then `wrecker` doesn't offer
 a reason to switch ... it does have an interactive mode.
 
 ![Wrecker Interactive Command Line](/wreck-interactive.gif)
