@@ -5,7 +5,7 @@ benchmarking a series of dependent requests.
 , mainly through 'Network.Wreq.Wrecker'.
 
 import 'Network.Wreq.Wrecker' to write clients and 'Wrecker' to run the
-them with either 'defaultMain' ir 'run'.
+them with either 'defaultMain' or 'run'.
 
 See https://github.com/skedgeme/wrecker#readme for more information.
 -}
