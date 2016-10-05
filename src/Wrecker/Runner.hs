@@ -261,7 +261,7 @@ run options actions = do
 -}
 runOne :: Options -> (Environment -> IO ()) -> IO AllStats
 runOne options f
-   =  let key = "key"
+   =  let key = ""
    in fromMaybe (error "runOne: impossible!")
    .  H.lookup key
   <$> run options [(key, f)]

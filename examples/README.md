@@ -38,7 +38,8 @@ Below is the source for `example`, which creates a client and server:
 {-# LANGUAGE ScopedTypeVariables #-}
 import qualified Client as Client
 import qualified Server as Server
-import Wrecker (run, runParser)
+import Wrecker (run)
+import Wrecker.Options (runParser)
 import Data.Function (fix)
 import Control.Exception (handle, IOException)
 import Control.Concurrent ( threadDelay

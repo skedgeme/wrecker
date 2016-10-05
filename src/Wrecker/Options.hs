@@ -95,7 +95,7 @@ instance Monoid PartialOptions where
             , mRequestNameColumnSize = requestNameColumnSize defaultOptions
             , mOutputFilePath        = outputFilePath        defaultOptions
             , mSilent                = Just $ silent         defaultOptions
-            , murlDisplay              = Just $ urlDisplay       defaultOptions
+            , murlDisplay            = Just $ urlDisplay       defaultOptions
             }
   mappend x y = PartialOptions
                   { mConcurrency           =  mConcurrency x <|> mConcurrency y
@@ -127,7 +127,7 @@ completeOptions options =
       , mRequestNameColumnSize = requestNameColumnSize
       , mOutputFilePath        = outputFilePath
       , mSilent                = Just silent
-      , murlDisplay              = Just urlDisplay
+      , murlDisplay            = Just urlDisplay
       } -> Just $ Options {..}
     _ -> Nothing
 
@@ -154,11 +154,11 @@ pPartialOptions
   <*> optional
       (  RunCount <$> option auto
                    (  long "run-count"
-                  <>  help "number of times to repeat "
+                  <>  help "number of times to repeat"
                    )
      <|> RunTimed <$> option auto
                    (  long "run-timed"
-                  <>  help "number of seconds to repeat "
+                  <>  help "number of seconds to repeat"
                    )
       )
   <*> optionalOption
@@ -166,8 +166,8 @@ pPartialOptions
       <> help "How long to wait for all requests to finish"
       )
   <*> optional
-      (  Interactive    <$ switch (long "interactive")
-     <|> NonInteractive <$ switch (long "non-interactive")
+      (  NonInteractive <$ switch (long "non-interactive")
+     <|> Interactive    <$ switch (long "interactive")
       )
   <*> optionalOption
       (  long "log-level"

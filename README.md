@@ -7,9 +7,59 @@
 
 ### Why?
 
-There are plenty of HTTP profilers in existence, `wrk`, `ab`, `JMeter`, etc. Most profilers provide some facility for scripting and using the responses of the previous requests. However, the scripting facility is usually weak and difficult to use.
+There are plenty of HTTP profilers in existence, `wrk`, `ab`, `JMeter`, `LoadRunner`, etc. Most profilers provide some facility for scripting and using the responses of the previous requests for future requests. However, the scripting facility is usually weak and esoteric.
 
-`wreck` is designed from the ground up for scripting complex API interactions. Benchmarks can utilize a `wreq` interface, along with the full benefits of using Haskell.
+`wrecker` is designed from the ground up for scripting complex API sequences sublimely. Benchmarks can utilize a `wreq` like interface, perhaps the easiest to use Haskell library for HTTP interaction, and quickly create wonderful typed API clients.
+
+`wrecker` is designed to seem comfortable and expected for current Haskellers. However, it is my hope that those who are struggling with scripting `LoadRunner` will find learning Haskell worth the effort because `wrecker` is that much easier. Here's hoping.
+
+#### How does it compare to my current http profiling?
+
+If you are happy with your HTTP profiling setup, then `wreck` doesn't offer a reason to switch ... it does have an interactive mode.
+
+![](/wreck-interactive.gif)
+
+That makes it a little easier to know when to stop.
+
+Like `wrk` it can fill up 100 megabit pipe from a laptop. It cannot easily distribute itself like `LoadRunner` ... yet.
+
+#### Accuracy
+
+`wreck` appears to produces results that are close to `wrk` and `ab` when the number of connections are below 100. As the number of connections increases to 1000 and 10000 `wrk` continue to work well, but `wrecker` and `ab` produce inflated numbers.
+
+I'll get some benchmarks up soon.
+
+You can play around with comparing `wreck` to `wrk` and `ab` in vm with the provide Vagrant file.
+
+```bash
+vagrant up && vagrant ssh
+cd /vagrant && cabal run example-server -- 10000
+```
+
+The `100000` is the `threadDelay` for the requests in microseconds. We measure the "overhead" of a request that returns immediately.
+
+##### Example Results
+ - 100 Connections
+   - `wrk -d 10 -t 2 -c 100 http://localhost:3000/root`
+     - mean: 104.78 ms    
+     - variance: 0.009 ms
+   - `ab -t 10 -c 100 http://localhost:3000/root`
+     - mean: 106.9 ms
+     - variance: 0.05 ms
+   - `wreck --concurrency=100 --run-timed=10 http://localhost:3000/root`
+     - mean: 105.6 ms
+     - variance: 000.17 ms
+##### Example Results 100 Connections
+ - 1000 Connections
+   - `wrk -d 10 -t 2 -c 100 http://localhost:3000/root`
+     - mean: 135.42 ms
+     - variance: 0.009 ms
+   - `ab -t 10 -c 100 http://localhost:3000/root`
+     - mean: 106.9 ms
+     - variance: 0.05 ms
+   - `wreck --concurrency=100 --run-timed=10 http://localhost:3000/root`
+     - mean: 316.0 ms
+     - variance: 000.90 ms
 
 ### Quick Start
 
@@ -18,6 +68,8 @@ There are plenty of HTTP profilers in existence, `wrk`, `ab`, `JMeter`, etc. Mos
 ```
 $ wreck http://localhost:3000/root
 ```
+
+![wreck terminal output](/wreck-example.gif?raw=true "wreck Terminal Output")
 
 The same functionality can executed from ghci, listed below is a similar one liner.
 

@@ -46,6 +46,8 @@ import qualified Network.Wai as Wai
 import Network.Socket (Socket)
 import qualified Network.Socket as N
 import Control.Exception
+import Data.Maybe (listToMaybe)
+import System.Environment
 
 newtype Envelope a = Envelope { value :: a }
   deriving (Show, Eq, Generic, ToJSON)
@@ -190,7 +192,7 @@ getASocket = \case
   Just port -> do s <- N.socket N.AF_INET N.Stream N.defaultProtocol
                   localhost <- N.inet_addr "127.0.0.1"
                   N.bind s (N.SockAddrInet (fromIntegral port) localhost)
-                  N.listen s 100
+                  N.listen s 1000
                   return (port, s)
 
   Nothing   -> openFreePort
@@ -214,10 +216,12 @@ start mport dist = do
 
 main :: IO ()
 main = do
+  xs <- getArgs
+  let delay = maybe 0 read $ listToMaybe xs
   (port, socket) <- getASocket $ Just 3000
 
   (ref, recorderThread, recorder) <- newStandaloneRecorder
-  scottyApp <- Scotty.scottyApp $ app (pure 0) port
+  scottyApp <- Scotty.scottyApp $ app (pure delay) port
 
   (Warp.runSettingsSocket defaultSettings socket
                                         $ recordMiddleware recorder
