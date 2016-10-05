@@ -54,7 +54,7 @@ library
                , Network.PublicSuffixList.Serialize
                , Network.PublicSuffixList.DataStructure
 
-  build-depends: base                   >= 4.7 && < 5
+  build-depends: base                   >= 4.6 && < 5
                , aeson                  >= 0.7.0.3
                , ansi-terminal          >= 0.6.2
                , ansigraph              >= 0.3.0
@@ -114,7 +114,7 @@ executable wreck
                      , http-client
                      , wreq
                      , lens
-                     
+
   cpp-options: -D_SERVER_IS_MAIN_
   ghc-options: -O2 -Wall -Wno-unused-do-bind -Wno-unused-top-binds -threaded -pgmL markdown-unlit -rtsopts "-with-rtsopts=-N -I0 -qg"
   default-language:    Haskell2010
