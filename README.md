@@ -78,7 +78,7 @@ The `100000` is the `threadDelay` for the requests in microseconds.
      - mean: 135.42 ms
      - variance: 0.009 ms
    - `ab -t 10 -c 100 http://localhost:3000/root`
-     - mean: 218.61
+     - mean: 218.61 ms
      - variance: 235.2 ms
    - `wreck --concurrency=100 --run-timed=10 http://localhost:3000/root`
      - mean: 316.0 ms
