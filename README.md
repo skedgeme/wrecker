@@ -94,20 +94,29 @@ The example below uses the `wrecker`'s `wreq` interface but any `http-client`
 based library could be used.
 
 ```haskell
+module Main where
+
+import Control.Monad (mapM_)
 import Wrecker
 import Network.Wreq.Wrecker
 
+test1 = [
+  "http://localhost:3000/page1/page1.css"
+  , "http://localhost:3000/page1/page1.js"
+  ]
+
+test2 = [
+  "http://localhost:3000/page2/page2.css"
+  , "http://localhost:3000/page2/page2.js"
+  ]
+
+testRoutes routes sess = do
+  let runner = get sess
+  mapM_ runner routes
+
 main = defaultMain
-  [ ( "first page"
-    , withWreq $ \sess do
-        get sess "http://localhost:3000/page1/page1.css"
-        get sess "http://localhost:3000/page1/page1.js"
-    )
-  , ( "second page"
-    , withWreq $ \sess do
-        get sess "http://localhost:3000/page2/page2.css"
-        get sess "http://localhost:3000/page2/page2.js"
-    )
+  [ ( "first page" , withWreq $ testRoutes test1 )
+  , ( "second page" , withWreq $ testRoutes test2 )
   ]
 
 ```
